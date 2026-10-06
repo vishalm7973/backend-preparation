@@ -1,60 +1,198 @@
-## What is Protocol
+# HTTP & Protocol Basics
 
-A protocol is a predefined set of rules and standards that allows two or more systems to communicate.
-It defines how data is formatted, transmitted, received, and interpreted. For example, HTTP defines how clients and servers communicate over the web, while TCP provides reliable data transmission between systems.
+## 1. What is a Protocol?
 
-## Type of protocols
-HTTP, HTTPS , TCP, UDP, SMPT, FTP,Websocket, SSH
+A **protocol** is a set of rules that allows systems to communicate.
 
-## HTTP Caching
-Http caching is way to cache http response basically and reuse it later, instead of requesting the same resource from the server every time.
--- HTTP caching = store a response temporarily so future requests can be served faster.
+It defines how data is:
 
-**HTTP caching headers**
-## -- 1. Cache-Control:- Cache-Control: max-age=3600
-The response can be considered fresh for 3600 seconds (1 hour).
+- Formatted
+- Sent
+- Received
+- Understood
 
--- Cache-Control: no-cache  
-you must validate it with the server before reusing it.
+### Common Protocols
 
--- Cache-Control: max-age=600  (The cached response can be considered fresh for 600 seconds. )
--- Cache-Control: public, max-age=3600 (The response can be cached by shared caches such as CDNs. useful for images,css,js)
--- Cache-Control: private, max-age=600  ( The response contains user-specific or sensitive data. It can only be cached by the end-user's local browser or device)
+- HTTP / HTTPS → Web communication
+- TCP → Reliable data transmission
+- UDP → Fast data transmission
+- SMTP → Sending emails
+- FTP → File transfer
+- WebSocket → Real-time communication
+- SSH → Secure remote access
 
-## --2. ETag  
-Basically through this we can check response is changed or not.
-If the content is unchanged, the server replies with an empty 304 status code instead of resending the entire file, saving bandwidth
+---
 
-## --2. Last-Modified: Wed, 21 Oct 2026 07:28:00 GMT
+# 2. HTTP Caching
 
--  The server delivers the resource along with a timestamp of when it was last changed.
--  When the browser needs the resource again, it sends that exact timestamp back to the server inside an If-Modified-Since request header:
+HTTP caching means **storing an HTTP response and reusing it later** instead of requesting it again.
 
-## Q: What is HTTP caching?
-HTTP caching is a mechanism where HTTP responses are stored by clients, proxies, or CDNs and reused for subsequent requests. It reduces latency, bandwidth usage, and server load. HTTP caching is controlled mainly through headers such as Cache-Control, ETag, and Last-Modified.
+Benefits:
 
-## Q. What is idempotent and non-idempotent
-idempotency is when repeating the same request produces the same reponse,
-requests can be retried because of: Network failures
-Timeouts
-Client retries
-Load balancer retries
-Duplicate requests
+- Faster response
+- Less bandwidth
+- Less server load
 
-**Non-Idempotent**: Post as it used to create new item.
+## Cache-Control
 
-## Q. Which HTTP methods are idempotent?
-GET, HEAD, PUT, DELETE,OPTIONS
+Controls how a response can be cached.
 
-## Q: HTTP caching vs Redis caching
---HTTP Cache: Usually caches the HTTP response.  
---Redis Cache:- Usually caches application/server data.
---HTTP caching reduces network/server work.
---Redis/application caching reduces backend/database work. 
+### max-age
 
-## Q. What is HTTP Content Negotiation?
- Content negotiation is the process through which a client and server determine the representation format of a resource, such as JSON, XML, or HTML.
+    Cache-Control: max-age=3600
 
-## Q.What is Content-Type?
+Response can be reused for **1 hour**.
 
-Content-Type specifies the media type of the request or response body.
+### no-cache
+
+    Cache-Control: no-cache
+
+Must **validate with the server** before reusing the cached response.
+
+### public
+
+    Cache-Control: public, max-age=3600
+
+Can be cached by shared caches such as **CDNs**.
+
+### private
+
+    Cache-Control: private, max-age=600
+
+Only the user's browser/device can cache it.
+
+---
+
+## ETag
+
+ETag helps check whether a resource has changed.
+
+    Client → "Is this version still valid?"
+    Server → 304 Not Modified
+
+If unchanged, the server returns **304** instead of sending the full response again.
+
+---
+
+## Last-Modified
+
+Server sends the time when the resource was last changed.
+
+The client can later send:
+
+    If-Modified-Since
+
+If nothing changed, the server can return:
+
+    304 Not Modified
+
+---
+
+## Interview: What is HTTP Caching?
+
+> HTTP caching stores responses in browsers, proxies, or CDNs and reuses them for later requests. It reduces latency, bandwidth usage, and server load.
+
+---
+
+# 3. Idempotent vs Non-Idempotent
+
+### Idempotent
+
+Repeating the same request has the **same intended effect on the server**.
+
+Useful when requests may be repeated because of:
+
+- Network failures
+- Timeouts
+- Client retries
+- Load balancer retries
+- Duplicate requests
+
+### Idempotent HTTP Methods
+
+- GET
+- HEAD
+- PUT
+- DELETE
+- OPTIONS
+
+### Non-Idempotent
+
+Repeating the request can create a **new effect each time**.
+
+Example:
+
+    POST /users
+
+Sending it twice may create two users.
+
+**Remember:**
+
+    Idempotent     → Repeat safely
+    Non-idempotent → Repeat may create another effect
+
+---
+
+# 4. HTTP Cache vs Redis Cache
+
+### HTTP Cache
+
+Usually caches the **HTTP response**.
+
+Examples:
+
+- Browser cache
+- CDN cache
+- Proxy cache
+
+### Redis Cache
+
+Usually caches **application/server data**.
+
+Example:
+
+    User data
+    Product data
+    Session data
+
+**Simple difference:**
+
+    HTTP Cache → Reduces network/server work
+
+    Redis Cache → Reduces backend/database work
+
+---
+
+# 5. Content Negotiation
+
+Content negotiation is how the **client and server decide the response format**.
+
+Examples:
+
+- JSON
+- XML
+- HTML
+
+The client can use headers such as:
+
+    Accept: application/json
+
+---
+
+# 6. Content-Type
+
+`Content-Type` tells us **what format the request or response body contains**.
+
+Example:
+
+    Content-Type: application/json
+
+Means:
+
+> The body contains JSON data.
+
+**Remember:**
+
+    Accept       → What format the client wants
+
+    Content-Type → What format the body actually is

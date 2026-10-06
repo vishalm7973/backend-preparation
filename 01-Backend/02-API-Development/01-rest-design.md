@@ -4,217 +4,276 @@
 
 REST stands for **Representational State Transfer**.
 
-REST is an architectural style used to design APIs around **resources**.
+REST is an architectural style for designing APIs around **resources**.
 
-A resource can be:
+Examples of resources:
 
-* User
-* Product
-* Order
-* Game
-* Ticket
+- User
+- Product
+- Order
+- Ticket
 
-REST APIs use standard HTTP methods to perform operations on these resources.
+REST uses HTTP methods to perform operations.
 
-Example:
-
-```http
-GET    /users
-POST   /users
-GET    /users/123
-PATCH  /users/123
-DELETE /users/123
-```
+    GET     /users
+    POST    /users
+    GET     /users/123
+    PATCH   /users/123
+    DELETE  /users/123
+    QUERY   /users/search
 
 ---
 
-## 2. What is a Resource in REST?
+## 2. What is a Resource?
 
-A resource is an entity or data that an API exposes to clients.
+A resource is data/entity exposed by an API.
 
-Examples:
+    /users
+    /products
+    /orders
+    /tickets
 
-```text
-/users
-/products
-/orders
-/tickets
-```
+A specific resource can have an ID:
 
-A specific resource can be identified using an ID:
-
-```http
-/users/123
-/products/456
-/orders/789
-```
+    /users/123
+    /products/456
 
 ---
 
-## 3. What is Resource-Oriented URL Design?
+## 3. Resource-Oriented URLs
 
-Resource-oriented URL design means that the URL represents a **resource**, not an action.
+The URL should represent the **resource**, not the action.
 
 ### Bad
 
-```http
-GET /getUsers
-POST /createUser
-POST /deleteUser
-POST /updateUser
-```
+    GET  /getUsers
+    POST /createUser
+    POST /deleteUser
 
 ### Good
 
-```http
-GET    /users
-POST   /users
-PATCH  /users/123
-DELETE /users/123
-```
+    GET    /users
+    POST   /users
+    PATCH  /users/123
+    DELETE /users/123
 
-The URL identifies the resource, while the HTTP method describes the operation.
+**Remember:**
 
----
-
-## 4. Why should REST URLs use nouns instead of verbs?
-
-URLs should generally represent resources using nouns.
-
-Example:
-
-```http
-GET /users
-```
-
-Here:
-
-* `/users` = resource
-* `GET` = operation
-
-Instead of:
-
-```http
-GET /getUsers
-```
-
-The operation `get` is already represented by the HTTP method.
-
-### Interview Answer
-
-> REST APIs generally use nouns in URLs because the URL identifies the resource, while the HTTP method defines the operation performed on that resource.
+    URL         → Resource
+    HTTP Method → Operation
 
 ---
 
-## 5. Should URLs use singular or plural nouns?
+## 4. Why Use Nouns Instead of Verbs?
 
-A common REST convention is to use **plural nouns** for collections.
+The URL identifies the resource, while the HTTP method defines the operation.
 
-Example:
+    GET /users
 
-```http
-/users
-/products
-/orders
-```
+    /users → Resource
+    GET    → Operation
 
-For an individual resource:
+**Interview:**
 
-```http
-/users/123
-/products/456
-/orders/789
-```
-
-This keeps the API consistent and predictable.
+> REST APIs generally use nouns in URLs because the URL identifies the resource, while the HTTP method defines the operation.
 
 ---
 
-##  What is the difference between path parameters and query parameters?
+## 5. Singular vs Plural URLs
 
-### Path Parameter
+A common convention is to use **plural nouns** for collections.
+
+    /users
+    /products
+    /orders
+
+For one resource:
+
+    /users/123
+    /products/456
+    /orders/789
+
+This keeps APIs consistent and predictable.
+
+---
+
+# 6. Path Parameters vs Query Parameters
+
+## Path Parameter
 
 Used to identify a specific resource.
 
-```http
-GET /users/123
-```
+    GET /users/123
 
-Here:
+Here `123` is the path parameter.
 
-```text
-123
-```
+## Query Parameter
 
-is a path parameter.
+Used for:
 
-### Query Parameter
-
-Used for optional operations such as:
-
-* Filtering
-* Searching
-* Sorting
-* Pagination
+- Filtering
+- Searching
+- Sorting
+- Pagination
 
 Example:
 
-```http
-GET /users?role=admin&page=2
-```
+    GET /users?role=admin&page=2
+
+**Remember:**
+
+    Path   → Which resource?
+    Query  → How to filter/search/sort/paginate?
 
 ---
 
-##  What makes a REST API predictable?
+# 7. What Makes a REST API Predictable?
 
-A predictable REST API usually has:
+A good REST API usually has:
 
-* Consistent resource naming
-* Consistent URL structure
-* Standard HTTP methods
-* Meaningful HTTP status codes
-* Consistent request/response formats
-* Consistent error responses
-* Clear pagination/filtering conventions
+- Consistent URLs
+- Standard HTTP methods
+- Meaningful status codes
+- Consistent request/response format
+- Consistent error format
+- Clear pagination/filtering
 
 Example:
 
-```http
-GET /users
-GET /users/123
+    GET /users
+    GET /users/123
 
-GET /orders
-GET /orders/123
-```
+    GET /orders
+    GET /orders/123
 
-The structure is easy for clients to understand.
+---
 
+# 8. HTTP Semantics
 
+HTTP semantics define the **meaning and expected behavior of HTTP methods and responses**.
 
+They include:
 
-```text
-URL        → What resource?
-HTTP Method → What operation?
-Query Params → How to filter/sort/paginate?
-```
+- HTTP methods
+- Status codes
+- Headers
+- Caching
+- Safety
+- Idempotency
 
-## Ques: What do you understand by HTTP semantics?
-HTTP semantics define what HTTP operations mean and how they are expected to behave.
+**Simple meaning:**
 
-HTTP semantics define the meaning and expected behavior of HTTP requests and responses. They specify how HTTP methods such as GET, POST, PUT, PATCH, DELETE, and QUERY should behave, including properties like safety and idempotency. They also cover how status codes, headers, caching, and other HTTP mechanisms should be interpreted. Understanding HTTP semantics helps us design APIs that behave predictably for clients, retries, caches, and other infrastructure.
+> HTTP semantics tell clients and servers how HTTP operations are expected to behave.
 
-## Ques: What is an idempotent HTTP method?
+---
 
-An idempotent method is one where making the same request multiple times has the same intended effect on server state as making it once.
+# 9. HTTP Methods
 
-## Ques: Why is DELETE idempotent?
+Common HTTP methods:
 
-Because after the resource has been deleted, repeating the same DELETE request does not produce another intended state change. The response may differ, but the resulting server state remains consistent with the requested deletion.
+    GET
+    POST
+    PUT
+    PATCH
+    DELETE
+    HEAD
+    OPTIONS
+    QUERY
 
-## Ques: How do you decide which HTTP status code to return?
+### QUERY
 
-I choose the status code based on the semantics of the operation and the reason for failure. For successful operations I commonly use 200, 201, or 204. For client-side problems I use appropriate 4xx codes such as 400, 401, 403, 404, 409, 422, and 429. For unexpected server or infrastructure failures I use 5xx codes such as 500, 502, 503, or 504. The goal is to make the API behavior predictable for clients and infrastructure.
+`QUERY` is a newer HTTP method intended for **safe, query-style requests where the query can be carried in the request content**.
 
-## Ques: Why should APIs have a consistent error response format?
+It is useful when a query is too complex or too large to conveniently represent in a URL.
 
-A consistent error format makes APIs easier for frontend clients, other services, monitoring systems, and developers to consume. Clients can depend on stable fields such as an error code, message, details, and request ID instead of implementing different error-handling logic for every endpoint.
+---
+
+# 10. Idempotent HTTP Methods
+
+An idempotent method has the **same intended effect on server state** when the same request is repeated.
+
+Common idempotent methods:
+
+    GET
+    HEAD
+    PUT
+    DELETE
+    OPTIONS
+    QUERY
+
+**Example:**
+
+    DELETE /users/123
+
+After the user is deleted, repeating the same DELETE does not create another state change.
+
+**Remember:**
+
+> Idempotent = Repeating the request has the same intended server-state effect.
+
+---
+
+# 11. Why is DELETE Idempotent?
+
+After the resource is deleted, sending the same DELETE again does not cause another intended state change.
+
+The response can be different, but the final server state remains consistent with the deletion.
+
+---
+
+# 12. HTTP Status Codes
+
+Choose the status code based on the operation and result.
+
+### Success
+
+    200 → OK
+    201 → Created
+    204 → No Content
+
+### Client Errors
+
+    400 → Bad Request
+    401 → Unauthorized
+    403 → Forbidden
+    404 → Not Found
+    409 → Conflict
+    422 → Unprocessable Content
+    429 → Too Many Requests
+
+### Server Errors
+
+    500 → Internal Server Error
+    502 → Bad Gateway
+    503 → Service Unavailable
+    504 → Gateway Timeout
+
+**Interview:**
+
+> I choose status codes based on the semantics of the operation and the reason for success or failure.
+
+---
+
+# 13. Consistent Error Responses
+
+APIs should use a **consistent error format**.
+
+Example:
+
+    {
+      "code": "USER_NOT_FOUND",
+      "message": "User not found",
+      "details": {},
+      "requestId": "abc123"
+    }
+
+Benefits:
+
+- Easier frontend handling
+- Easier debugging
+- Easier monitoring
+- Consistent API behavior
+
+**Interview:**
+
+> A consistent error format allows clients and services to handle errors in a predictable way.

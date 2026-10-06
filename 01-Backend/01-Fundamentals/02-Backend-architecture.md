@@ -1,306 +1,389 @@
-# Backend Architecture Notes
+# Backend Architecture
 
-## 1. Client-Server Architecture
+## 1. Client–Server Architecture
 
-- Client sends a request, server processes it and sends a response.
-- The server may run business logic, talk to a database or other services, then respond.
-- The server does not have to access a database on every request sometime it respond from cached.
-- Example: `GET /profile` -> server authenticates -> fetches user from DB -> returns response.
+This describes **how the client and server communicate**.
 
-Flow:
+    Client
+      ↓ Request
+    Server
+      ↓
+    Process Request
+      ↓ Response
+    Client
 
-```
-Client -> HTTP Request -> Server -> Business Logic -> DB / Other Services
-Client <- HTTP Response <- Server <-
-```
+- Client sends a request.
+- Server processes it.
+- Server may use DB, cache, or other services.
+- Server sends a response.
 
-Interview line:
-- "Client-server is a model where the client sends a request and the server processes it, possibly using a database or other services, and returns a response."
+**Interview:**
 
----
-
-## 2. Stateless vs Stateful
-
-### Stateless
-
-* The server does **not store client/session state locally** on a specific server instance between requests.
-* **Any server instance can handle any request**, which makes horizontal scaling easier.
-* The client typically sends the required authentication information, such as a **token**, with each request, and the server validates it.
-* A **session ID cookie can still be used** if the actual session data is stored in a shared store such as **Redis**. 
-In that case, the application servers remain stateless because no server instance depends on its own local session storage.
-
-
-### Stateful
-- Stateful means the application depends on state maintained from previous requests.
-- The server keeps client information between requests.
-- Example: the session is stored in Server A's memory. If the next request goes to Server B, B does not know the session.
-
-### Why stateless scales easily
-- Requests do not depend on one particular server.
-- Add more instances behind a load balancer.
-- Any instance can process any request.
-
-### Solving the stateful scaling problem
-- Sticky sessions: the load balancer keeps sending a user to the same server. It works but reduces scaling flexibility.
-- Shared session store: keep sessions in Redis or a DB so every server can read them.
+> Client-server architecture means the client sends requests to the server, and the server processes them and returns responses.
 
 ---
 
-## 3. Monolith
+# 2. Application Architecture
 
-A monolith is an architecture where the application's major functionality is packaged and deployed as a single application. It is simple to develop and operate initially, but as the system grows, the codebase can become tightly coupled and scaling or deploying individual parts independently becomes more difficult.
+This describes **how the backend application is structured and deployed**.
 
-- A single deployed application and single deployable unit.
-- The application's features and business logic are part of the same backend application.
-- Typically, the entire application is built and deployed together.
-- Example: Users, Orders, Payments, Products, and Subscriptions all exist within one backend application.
+## 2.1 Monolith
 
-Pros:
-- Simple to develop, test, and deploy
-- Easy transactions (one DB)
-- Low infrastructure and operationa.
-- Easier to implement transactions across related functionality, especially when using a shared database.
-- Local function/module calls are simpler than network calls between services.
+The entire application is **one deployable unit**.
 
-Cons:
-- Can become tightly coupled ("big ball of mud")
-- Large codebase can become difficult to maintain.
-- Scaling is all-or-nothing
-- A small change may require redeploying the entire application.
-- Multiple teams working in the same codebase can create coordination challenges.
-- Large codebase slows down builds and teams
+    Backend Application
+    ├── Users
+    ├── Orders
+    ├── Payments
+    └── Products
 
----
+### Pros
 
-## 4. Modular Monolith
+- Simple to develop
+- Easy to test and deploy
+- Simple transactions
+- Less infrastructure
 
-- Still one application and one deployment.
-- Code is organized into well-defined modules with clear boundaries.
-- Example modules: Users, Orders, Payments, Subscriptions, Notifications.
+### Cons
 
-Rules:
-- Each module should own and control its business logic and data access.
-- Modules talk through public interfaces, not internals.
-- Provides better organization and separation without introducing distributed-system complexity.
-- Good stepping stone toward microservices.
-
-Formula:
-- Monolith = one application
-- Modular monolith = one application + strong internal boundaries
+- Can become tightly coupled
+- Large codebase becomes difficult to maintain
+- Cannot scale individual features independently
+- Small changes may require full deployment
 
 ---
 
-## 5. Microservices
+## 2.2 Modular Monolith
 
-- An architecture where an application is divided into independently deployable services, usually organized around business/domain boundaries.
-- Each service is responsible for a specific business capability.
-- Each service should ideally own its data and control access to it.
-- A separate database per service is a common approach, but it is not the only possible implementation.
-- Separate repositories are common, but they are not required by the definition of microservices.
+Still **one application**, but divided into clear modules.
+
+    One Application
+    ├── User Module
+    ├── Order Module
+    ├── Payment Module
+    └── Notification Module
+
+- Each module has its own business logic.
+- Modules have clear boundaries.
+- Easier to maintain than a large monolith.
+- Can be a good step toward microservices.
+
+**Remember:**
+
+> Monolith = One application
+>
+> Modular Monolith = One application + clear modules
+
+---
+
+## 2.3 Microservices
+
+Application is divided into **independently deployable services**.
+
+    API Gateway
+    ├── User Service → User DB
+    ├── Order Service → Order DB
+    └── Payment Service → Payment DB
 
 Each service can:
-- Deploy independently.
-- Scale independently.
-- Be developed and maintained by a different team.
-- Use different technologies when there is a valid reason.
-- Own and manage its business data independently.
 
-Example:
+- Deploy independently
+- Scale independently
+- Own its data
+- Be maintained by different teams
 
-```
-API Gateway -> User Service    -> User DB
-            -> Order Service   -> Order DB
-            -> Payment Service -> Payment DB
-```
+### When to use?
 
-### When to choose microservices
-I wouldn't choose microservices just because an application has many features. I would first identify clear business boundaries and then consider microservices when we have a real need for independent deployment, scaling, team ownership, or technology choices. For example, if the Payment Service receives significantly more traffic than the Notification Service, microservices allow us to scale those services independently.
+Use microservices when there are:
 
-- With microservices, each service can be scaled independently based on its traffic and resource requirements.
-- Not just because there are many features (almost every app has many).
-- Choose when there are clear domain boundaries and a real need for independent deployment, scaling, team ownership, or technology choices.
-- Example: Payments has high traffic (10 instances), Notifications has low traffic (2 instances). Scale each separately.
+- Clear business boundaries
+- Need for independent scaling
+- Need for independent deployment
+- Multiple teams/services
 
-### Problems introduced
-- Network communication: calls can fail or be slow
-- Distributed failures: one service down can affect others
-- Distributed transactions: no simple ACID across databases (use sagas or eventual consistency)
-- Observability: need centralized logging, metrics, tracing
-- Infrastructure cost: more containers, DBs, pipelines
-- Operational complexity: retries, timeouts, circuit breakers, service discovery, inter-service auth, versioning
+### Problems
 
-Interview line:
-- "Microservices provide independent deployment and scaling, but introduce distributed-system complexity like network failures, distributed transactions, observability needs, infrastructure cost, and operational overhead."
+- Network failures
+- Distributed transactions
+- More infrastructure
+- More monitoring
+- More operational complexity
 
-### Comparison
+**Interview:**
 
-"The main difference is where the boundaries exist. In a monolith, most functionality is deployed as one unit. In a modular monolith, we maintain strong boundaries inside that single application. In microservices, those boundaries become independently deployable services, which provides independent scaling and deployment but introduces distributed-system complexity
+> Microservices provide independent deployment and scaling, but introduce distributed-system complexity.
 
 ---
 
-## 6. Layered Architecture (Controller - Service - Repository)
+# 3. Code Architecture
 
-Layered architecture divides an application into separate layers based on responsibility. In a typical backend, the controller handles HTTP concerns, the service contains business logic, and the repository handles data access. This separation improves maintainability, testability, and reduces coupling.
-```
-Client -> Controller -> Service -> Repository -> Database
-```
+This describes **how code inside the backend is organized**.
+
+## 3.1 Layered Architecture
+
+Common structure:
+
+    Client
+      ↓
+    Controller
+      ↓
+    Service
+      ↓
+    Repository
+      ↓
+    Database
 
 ### Controller
-- Handles HTTP concerns: route, method, params, query, body, auth integration, status codes.
-- Reads query parameters
-- Reads request body
-- Converts the service result into an HTTP response.
-- No business logic.
+
+Handles HTTP-related work:
+
+- Routes
+- Params
+- Query
+- Body
+- HTTP response
+
+**No business logic.**
 
 ### Service
-- Business logic and use cases.
-- Coordinates repositories and other services.
-- Calls external services when required.
-- Returns a result or business outcome, not an HTTP response.
+
+Handles:
+
+- Business logic
+- Use cases
+- Calling repositories
+- Calling other services
 
 ### Repository
-- Data access only (DB queries, Create,Read query ORM calls).
-- Its responsibility is to communicate with the database or persistence layer.
+
+Handles:
+
+- Database queries
+- CRUD operations
+- Data access
+
+**Simple rule:**
+
+> Controller = HTTP
+>
+> Service = Business Logic
+>
+> Repository = Database
+
+---
+
+# 4. Design Principles
+
+These are **principles used to write better code**.
+
+## 4.1 Dependency Injection (DI)
+
+DI means a class **receives its dependencies instead of creating them itself**.
+
+### Bad
+
+    class UserService {
+      private repository = new UserRepository();
+    }
+
+### Good
+
+    class UserService {
+      constructor(private repository: UserRepository) {}
+    }
+
+### Benefits
+
+- Less coupling
+- Easier testing
+- Easy to replace dependencies
+- Better maintainability
+
+**Remember:**
+
+> IoC = Principle
+>
+> DI = Technique
+>
+> DI Container = Connects dependencies automatically
+
+---
+
+## 4.2 SOLID Principles
+
+SOLID helps make code:
+
+- Maintainable
+- Testable
+- Flexible
+- Reusable
+- Less tightly coupled
+
+### S — Single Responsibility
+
+A class should have **one main responsibility**.
+
+    UserService
+    PaymentService
+    EmailService
+
+Instead of one huge `GodService`.
+
+### O — Open/Closed
+
+> Open for extension, closed for modification.
 
 Example:
 
-async findById(id: string) {
-  return this.prisma.product.findUnique({
-    where: { id }
-  });
-}
+Add PayPal without changing existing Stripe logic.
+
+### L — Liskov Substitution
+
+Child classes should work wherever the parent is expected.
+
+Example:
+
+If `Bird` has `fly()`, making `Penguin` extend `Bird` can break the design.
+
+### I — Interface Segregation
+
+Prefer **small, focused interfaces** instead of one large interface.
+
+### D — Dependency Inversion
+
+High-level code should depend on **abstractions**, not specific implementations.
+
+    OrderService
+         ↓
+    PaymentProvider
+         ↓
+    Stripe / PayPal
 
 ---
 
-## 7. Dependency Injection (DI)
+## 4.3 DRY — Don't Repeat Yourself
 
--  Dependency Injection is a design technique where a class receives the dependencies it needs from outside instead of creating them itself. It reduces coupling and makes the code easier to test, maintain, and change.
+DRY means **avoid repeating the same logic or knowledge in multiple places**.
 
-Bad (tight coupling):
+Instead of writing the same code again and again, create a reusable function, method, service, or utility.
 
-```typescript
-class UserService {
-  private repository = new UserRepository();
-}
-```
+### Benefits
 
-Good (constructor injection):
+- Less duplicate code
+- Easier maintenance
+- Fix bugs in one place
+- Easier to reuse logic
 
-```typescript
-class UserService {
-  constructor(private repository: UserRepository) {}
-}
-```
+**Interview:**
 
-NestJS example:
-
-```typescript
-@Injectable()
-export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
-}
-```
-
-Benefits:
-- Loose coupling
-- Easy testing (inject a mock repository, no real DB)
-- Easy replacement of implementations
-- Better maintainability
-
-Related terms:
-- Inversion of Control (IoC): the principle
-- DI: the technique
-- DI container: the framework that wires objects (Nest, Spring, .NET)
-- Composition root: the one place where everything is wired
+> DRY means avoiding duplication by keeping common logic in one reusable place.
 
 ---
 
-## 8. SOLID Principles
-SOLID is a set of five object-oriented design principles that help us write code that is:
+# 5. Domain Design
 
-Maintainable
-Testable
-Flexible
-Reusable
-Less tightly coupled
-S → Single Responsibility Principle
-O → Open/Closed Principle
-L → Liskov Substitution Principle
-I → Interface Segregation Principle
-D → Dependency Inversion Principle
+This describes **how we model complex business logic**.
 
-### S - Single Responsibility
-- A class or module has one primary responsibility and one main reason to change.
-- Example: UserService, PaymentService, OrderService, EmailService instead of one GodService.
+## 5.1 DDD — Domain-Driven Design
 
-### O - Open/Closed
-- Open for extension, closed for modification.
-- We should be able to add new behavior without repeatedly modifying stable existing code.
-- Example: a PaymentProvider interface with Stripe and PayPal implementations. Adding a new provider does not change existing logic.
+DDD means designing software around the **business domain, concepts, and rules**.
 
-### L - Liskov Substitution
-- A subtype/child must be usable wherever the base type/parent is expected, without breaking expected behavior.
-- Example: if Bird has `fly()`, then Penguin extending Bird breaks the contract.
-- Another violation: a subclass throwing NotImplemented for an inherited method.
+Instead of starting with:
 
-### I - Interface Segregation
-- Do not force clients to depend on methods they do not use.
-- Prefer small, focused interfaces.
-- Example: split Worker into Workable, Eatable, Sleepable instead of one fat interface.
+> "What database tables do we need?"
 
-### D - Dependency Inversion
-- High-level business logic shouldn't depend directly on low-level implementation details.
-- OrderService depends on a PaymentProvider abstraction, not on Stripe directly.
-- DI is the mechanism, DIP is the principle.
+First ask:
 
----
+> "What business problem are we solving?"
 
-## 9. DDD Basics
-DDD = Domain-Driven Design
+### Why use DDD?
 
-DDD is an approach to designing software around the business domain, business concepts, and business rules.
-Instead of starting with: "What database tables and APIs do we need?".
-we first understand:"What business problem are we solving, and what are the important business rules?"
+- Handle complex business logic
+- Define clear business boundaries
+- Use common business terminology
+- Make large systems easier to maintain
 
-## Why Use DDD?
--- Organize complex business logic
--- Understand the business domain clearly
--- Use consistent business terminology
--- Create clear boundaries between different parts of the system
--- Reduce tightly coupled business logic
--- Make large applications easier to maintain
+### Important Concepts
 
-## Q: What is Domain-Driven Design?
-
-Domain-Driven Design is an approach to designing software around the business domain, its concepts, and its rules. It helps us manage complex business logic by identifying entities, value objects, aggregates, and bounded contexts, while using a common language between developers and business stakeholders.
-
-## Q: When would you use DDD?
-
-I would consider DDD when the application has complex business rules and multiple business domains where clear boundaries and consistent business terminology are important.
-
-## DDD Pattern/concept
---
-| Concept                 | Simple meaning                                                      |
-| ----------------------- | ------------------------------------------------------------------- |
-| **Domain**              | The business problem/area the software solves                       |
-| **Entity**              | Object where identity matters                                       |
-| **Value Object**        | Object where value matters, not identity                            |
-| **Aggregate**           | Group of related domain objects treated as one consistency boundary |
-| **Aggregate Root**      | Main entry point that controls the aggregate                        |
-| **Bounded Context**     | Clear boundary around a particular business model                   |
-| **Ubiquitous Language** | Shared terminology between developers and business experts          |
-
-
----
-
-## 10. Common Terminology Mistakes to Avoid
-
-| Wrong | Correct |
+| Concept | Simple Meaning |
 |---|---|
-| Stateful = same connection | Stateful = app depends on state from previous requests |
-| Stateless = always bearer token | Stateless is not only JWT |
-| Monolith = one repo | Monolith = one deployable unit |
-| Microservices = separate repos | Microservices = independently deployable, domain-based services |
-| Service handles the HTTP response | Service returns a result, controller builds the response |
-| Liskov = child should not depend on parent | Liskov = child must honor the parent's contract |
-| I = Integration | I = Interface Segregation |
+| Domain | Business area |
+| Entity | Object with identity |
+| Value Object | Value matters, not identity |
+| Aggregate | Group of related objects |
+| Aggregate Root | Main entry point of aggregate |
+| Bounded Context | Clear business boundary |
+| Ubiquitous Language | Shared language between business and developers |
+
+---
+
+# 6. Stateless vs Stateful
+
+This describes **whether the application depends on state from previous requests**.
+
+## Stateless
+
+Server does **not store client state locally**.
+
+    Request 1 → Server A
+    Request 2 → Server B
+    Request 3 → Server C
+
+Any server can handle the request.
+
+- Usually sends authentication information with each request.
+- JWT is one common approach.
+- Shared session storage like Redis can also be used.
+
+### Why useful?
+
+Easy horizontal scaling.
+
+---
+
+## Stateful
+
+Server depends on information from previous requests.
+
+Example:
+
+    Login → Server A stores session
+
+    Next Request → Server B
+                   ↓
+              Doesn't know session
+
+### Solutions
+
+- Sticky sessions
+- Shared session store like Redis
+
+---
+
+# 7. How Everything Fits Together
+
+This is the **most important mental model**.
+
+    BACKEND SYSTEM
+      │
+      ├── Client–Server
+      │      └── Client ↔ Backend
+      │
+      ├── Application Architecture
+      │      ├── Monolith
+      │      ├── Modular Monolith
+      │      └── Microservices
+      │
+      ├── Code Architecture
+      │      └── Layered Architecture
+      │             ├── Controller
+      │             ├── Service
+      │             └── Repository
+      │
+      ├── Design Principles
+      │      ├── Dependency Injection
+      │      ├── SOLID
+      │      └── DRY
+      │
+      └── Domain Design
+             └── DDD

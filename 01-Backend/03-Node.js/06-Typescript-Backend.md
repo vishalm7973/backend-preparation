@@ -1,247 +1,200 @@
+# TypeScript
 
-## 1. What is Typescript.
-TypeScript is a superset of JavaScript that adds static typing and compile-time type checking. It helps us catch errors during development and makes large applications easier to maintain. TypeScript is eventually converted to JavaScript, which runs normally in Node.js or the browser.
+## 1. What is TypeScript?
 
-How it works with JS:
+TypeScript is a **superset of JavaScript** that adds **static typing** and type checking.
 
-```
-TypeScript
-   ↓
-Adds types
-   ↓
-Compile-time checking
-   ↓
-JavaScript
-   ↓
-Node.js / Browser
-   ↓
-Runtime
+It helps catch errors before the application runs.
 
-```
+    TypeScript
+        ↓
+    Type checking
+        ↓
+    JavaScript
+        ↓
+    Node.js / Browser
+        ↓
+    Runtime
 
-## Ques: What is Static vs Dynamic Typing?
+**Remember:** TypeScript checks types; JavaScript runs at runtime.
 
-Static typing:- 
-In a statically typed language, the type of a variable is checked before the program runs.So it catches the error during compile/type-check time. 
-It checks type before execution.
+---
 
-Dynamic typing:
-In a dynamically typed language, types are determined and checked while the program is running.JavaScript allows the variable to change its type.
-It checks type at runtime.
+## 2. Static vs Dynamic Typing
 
-## Ques: What is Compile Time and Runtime ?
+### Static Typing
+Types are checked **before runtime**.
 
-**Compile time** = the stage before the program is executed.
+Example: TypeScript
 
-                 For Example:- TypeScript can detect error before your application actually runs.
+### Dynamic Typing
+Types are checked **at runtime**.
 
-**Runtime**:- when the program is actually executing.
-When Node.js actually executes these instructions, that's runtime.
+Example: JavaScript
 
-At runtime, things such as these happen:
+**Remember:**
 
-Functions execute,
-Variables get values,
-API requests happen,
-Database queries happen,
-Files are read,
-Timers execute,
-Event loop handles asynchronous work
+    TypeScript → Type checking before runtime
+    JavaScript  → Type checking during runtime
 
+---
 
-**TypeScript checks types before runtime. After TypeScript is converted to JavaScript, the JavaScript executes normally through the JavaScript runtime, including the call stack and event loop in Node.js.**
+## 3. Compile Time vs Runtime
 
-## 2. TypeScript compiler options / type-checking rules.
+**Compile time** → Before the program runs.
 
-* **`strictNullChecks`** — Checks `null` and `undefined` separately.
-    Prevents us from accidentally using a value that might be null or undefined.
+Example: TypeScript checks types.
 
-    **Simple:** If a value can be null, TypeScript forces us to handle that possibility.
+**Runtime** → When the program is actually running.
 
-* **`noImplicitAny`** — Prevents TypeScript from silently assigning `any` type when it cannot determine a type. Forces us to define the type explicitly.
- **Simple:** Don't allow TypeScript to automatically assume any.
+Example:
+- Functions execute
+- API requests happen
+- DB queries run
+- Files are read
 
-* **`strictFunctionTypes`** — Performs stricter type checking when assigning or passing functions.
+---
 
-* **`strictPropertyInitialization`** — Ensures class properties are properly initialized before they are used.
-* **`noImplicitThis`** — Prevents incorrect or unclear use of `this`.
-Makes sure TypeScript knows what this refers to.
+## 4. TypeScript Strict Options
 
-## Ques: What is strict: true?
-strict is a master switch for TypeScript's strict type-checking rules.This enables a all group of strict checking options that we have and we generally do not need to write all of them individually
+### `strictNullChecks`
+Makes TypeScript handle `null` and `undefined` separately.
 
-## Ques: Can I use only strictNullChecks: true?
+### `noImplicitAny`
+Prevents TypeScript from automatically using `any`.
 
-yes, This enables only that particular rule.
+### `strictFunctionTypes`
+Checks function types more strictly.
 
-## 3. Generics
-Generics allow us to write reusable code where the type is decided when the code is used, while still maintaining type safety.
+### `strictPropertyInitialization`
+Ensures class properties are initialized.
 
-```
-We use generic:
-function getValue<T>(value: T): T {
-  return value;
-}
-```
-T is not a special keyword. It is just a name we give to the generic type parameter.
+### `noImplicitThis`
+Checks that `this` is used correctly.
 
-You can use other valid names:
+### `strict: true`
+Enables the main strict type-checking rules together.
 
-```
-function getValue<Type>(value: Type): Type {
-  return value;
-}
-```
+**Remember:** `strict: true` = stronger type checking.
 
-**Simple:** I don't know the type yet. When someone uses this function, I'll know the type
+---
 
-## 4. Utility Types
+## 5. Generics
 
-Utility types are built-in TypeScript types that transform existing types.
-We have multople Utilities that are used to transform types.
+Generics allow us to write reusable code while keeping type safety.
 
-| Utility Type    | Simple meaning                | Common backend use             |
-| --------------- | ----------------------------- | ------------------------------ |
-| `Partial<T>`    | Make everything optional      | PATCH/update                   |
-| `Required<T>`   | Make everything required      | Complete objects               |
-| `Readonly<T>`   | Prevent property reassignment | Config/immutable data          |
-| `Pick<T, K>`    | Keep selected properties      | API response/DTO               |
-| `Omit<T, K>`    | Remove selected properties    | Hide password/internal fields  |
-| `Record<K,T>`   | Define key/value object       | Permissions/config maps        |
-| `ReturnType<T>` | Get function return type      | Reuse function types           |
-| `Parameters<T>` | Get function parameters       | Reuse function parameter types |
+    function getValue<T>(value: T): T {
+      return value;
+    }
 
+`T` is just a name for the generic type.
 
+**Simple:**  
+"I don't know the type yet. I'll know it when the function is used."
 
-**Ques: Why do we need Utility?**
+---
 
-Now imagine you need a user object for updating a user.
+## 6. Utility Types
 
-When updating a user, the user might send only name and other keys are not required So you could create another type manually, But this creates duplication we can fix this with Utility Types.
+Utility types modify existing types.
 
+| Utility | Simple meaning |
+|---|---|
+| `Partial<T>` | Everything optional |
+| `Required<T>` | Everything required |
+| `Readonly<T>` | Cannot reassign properties |
+| `Pick<T,K>` | Keep selected properties |
+| `Omit<T,K>` | Remove selected properties |
+| `Record<K,T>` | Key-value object type |
+| `ReturnType<T>` | Get function return type |
+| `Parameters<T>` | Get function parameters |
 
-```
+### Example
+
+    interface User {
+      id: number;
+      name: string;
+      email: string;
+    }
+
+    type UpdateUser = Partial<User>;
+
+Now all fields are optional.
+
+**Common use:** `Partial<T>` → PATCH/update APIs.
+
+---
+
+## 7. Type Narrowing
+
+Narrowing means making a broad type more specific using a check.
+
+    function print(value: string | number) {
+      if (typeof value === "string") {
+        console.log(value.toUpperCase());
+      } else {
+        console.log(value.toFixed(2));
+      }
+    }
+
+TypeScript knows the correct type inside each block.
+
+---
+
+## 8. DTO
+
+**DTO = Data Transfer Object**
+
+It defines the structure of data sent between the client and backend.
+
+    interface CreateUserDto {
+      name: string;
+      email: string;
+      password: string;
+    }
+
+### Why DTO?
+
+- Clear API contract
+- Better type safety
+- Defines expected fields
+- Keeps API data separate from DB entities
+
+**Remember:** DTO = "What data does this API expect?"
+
+---
+
+## 9. Compile-time Type Checking
+
+TypeScript checks code **before the application runs**.
+
+    TypeScript code
+         ↓
+    Type checking
+         ↓
+    Error found / JavaScript generated
+
+---
+
+## 10. Runtime Validation
+
+Runtime validation checks **actual data while the application is running**.
+
 Example:
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-  age: number;
-}
+    Client → API
+             ↓
+         Validate body
+             ↓
+         Service
 
-type UpdateUser = Partial<User>;
+It checks things like:
+- Required fields
+- Correct types
+- Valid format
 
-This automatically makes all properties optional.
+### Important Difference
 
-{
-  id?: number;
-  name?: string;
-  email?: string;
-  age?: number;
-}
+**TypeScript type checking** → before runtime.
 
-```
-
-
-
-
-                         User
-                          │
-          ┌───────────────┼────────────────┐
-          │               │                │
-          ▼               ▼                ▼
-      Create User     Update User      API Response
-          │               │                │
-          ▼               ▼                ▼
-       Omit id      Partial<User>   Omit password
-
-Instead of creating three separate interfaces manually, we can use Utility Types.
-
-## 5. Narrowing
-Type narrowing is the process of making a broad type more specific based on runtime checks.
-
-For example, if a variable has the type string | number, I can use typeof to determine which type I actually have.
-
-```
-function print(value: string | number) {
-  if (typeof value === "string") {
-    // TypeScript knows: value is string
-    console.log(value.toUpperCase());
-  } else {
-    // TypeScript knows: value is number
-    console.log(value.toFixed(2));
-  }
-}
-```
-
-## 6. DTO (Data Transfer Object)
-
-A DTO is an object/type/class, It defines the structure of data transferred between different layers or between the client and server. In backend applications, DTOs are commonly used to define API request and response contracts.
-
-```
-For example, client sends payload:
-
-{
-  "name": "Jaspreet",
-  "email": "test@example.com",
-  "password": "123456"
-}
-
-we can define DTO: 
-
-interface CreateUserDto {
-  name: string;
-  email: string;
-  password: string;
-}
-
-It Tells us: When creating a user, we expect name, email, and password.
-
-Then controller can expect:
-function createUser(data: CreateUserDto) {
-  // ...
-}
-```
-
-**Ques: Why do we need DTO?**
-
--- We use DTOs to define a clear data contract, improve type safety, avoid passing unnecessary fields between layers, and keep API models separate from database entities.
--- Without a DTO , The code doesn't clearly communicate what the API expects with DTO expected structure is clear.
-
-```
-Without DTO:- 
-
-app.post("/users", (req, res) => {
-  const user = req.body;
-
-  // What fields are expected?
-  // Is email required?
-  // Is age a number?
-});
-
-WITH DTO:- 
-
-interface CreateUserDto {
-  name: string;
-  email: string;
-  age: number;
-}
-
-app.post("/users", (req, res) => {
-  const data: CreateUserDto = req.body;
-});
-
-```
-
-## 7. Compile-time type checking
-
--- TypeScript checks your code before the program runs.
-
--- This checking happens during development/building, not when an HTTP request arrives.
-
--- TypeScript reports an error during development or build time.
-
-## 8. Runtime validation
- Runtime validation means checking actual data while the application is running. For example, when an API receives a request body, we can validate whether required fields exist and whether their values have the correct format before passing the data to the service layer.
+**Runtime validation** → when real data enters the application.

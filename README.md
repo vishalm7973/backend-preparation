@@ -4,26 +4,15 @@ This repository is a set of study notes and practice exercises for JavaScript, b
 
 ## Contents
 
-### JavaScript Concepts
+### JavaScript Interview Notes
 
-- [Variables](JS-Concept/Variables-hoisting/01-what-is-variables.md)
-- [Variable types](JS-Concept/Variables-hoisting/02-variables-type.md)
-- [Scope](JS-Concept/Variables-hoisting/03-scope.md)
-- [Scope chain](JS-Concept/Variables-hoisting/04-scope-chain.md)
-- [Temporal Dead Zone (TDZ)](JS-Concept/Variables-hoisting/05-TDZ.md)
-- [Data types](JS-Concept/Variables-hoisting/06-DataTypes.md)
-- [Type coercion](JS-Concept/Variables-hoisting/07-type%20coercion.md)
-- [Conditions](JS-Concept/if-else-conditions/conditions.md)
-- [Loops](JS-Concept/loop-concept/loops.md)
-
-### JavaScript Practice
-
-- [Find the largest number](JS-Concept/if-else-conditions/find-largest-number.js)
-- [FizzBuzz](JS-Concept/if-else-conditions/fizz-buzz.js)
-- [Print even numbers](JS-Concept/loop-concept/print-even-number.js)
-- [Print numbers from 1 to 10](JS-Concept/loop-concept/Print-number%281to10%29.js)
-- [Reverse a string](JS-Concept/loop-concept/reverString.js)
-- [Sum numbers](JS-Concept/loop-concept/sumof-allNumbers.js)
+- [Variables, types, and coercion](06-JavaScript/01-Variables-Types-and-Coercion.md)
+- [Scope, hoisting, and closures](06-JavaScript/02-Scope-Hoisting-and-Closures.md)
+- [Functions, `this`, and currying](06-JavaScript/03-Functions-This-and-Currying.md)
+- [Array, string, and collection methods](06-JavaScript/04-Array-String-Collection-Methods.md)
+- [Asynchronous JavaScript](06-JavaScript/05-Asynchronous-JavaScript.md)
+- [Prototypes, modules, errors, and memory](06-JavaScript/06-Prototypes-Modules-Errors-and-Memory.md)
+- [Polyfills and common interview questions](06-JavaScript/07-Polyfills-and-Common-Interview-Questions.md)
 
 ### Backend Fundamentals
 

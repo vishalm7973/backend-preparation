@@ -1,114 +1,130 @@
-## API Lifecycle
+# API Lifecycle
 
-API lifecycle covers how an API is designed, changed, maintained, and eventually replaced without unnecessarily breaking existing clients.
+API lifecycle covers how an API is **designed, changed, maintained, and eventually replaced** without unnecessarily breaking clients.
+
+---
 
 ## 1. API Versioning
 
-API versioning means maintaining different versions of an API so that we can change or improve the API without unexpectedly breaking existing clients.
+API versioning allows us to **change an API without breaking existing clients**.
 
-For example, imagine your current API returns:
+Example:
 
-```
-Request: 
-GET /api/users/123
+    /api/v1/users/123
+    /api/v2/users/123
 
-Response:
+    v1 → Old contract
+    v2 → New contract
 
-{
-  "id": 123,
-  "name": "Jaspreet"
-}
+Existing clients can continue using `v1`, while new clients use `v2`.
 
-Later, want to change the response:
+### Why do we need it?
 
-{
-  "userId": 123,
-  "fullName": "Jaspreet Kaur"
-}
+One backend may be used by:
 
-```
-`If existing frontend/mobile applications still expect id and name, changing the existing API can break those clients.`
+- Web application
+- Mobile application
+- Admin dashboard
+- Partner application
 
-Instead, you can create a new version:
+Changing the existing API can break these clients.
 
-```
-/api/v1/users/123
-/api/v2/users/123
+---
 
-Now:
+## 2. API Versioning Approaches
 
-v1 → old contract
-v2 → new contract
+### A. URL Versioning — Most Common
 
-```
+    /api/v1/users
+    /api/v2/users
 
-Existing clients can continue using v1, while newer clients can move to v2.
+Simple and easy to understand.
 
-## 3. Why Do We Need API Versioning?
+### B. Query Parameter
 
-Suppose we have one backend application, and its APIs are consumed by multiple frontend applications or repositories, such as:
+    /api/users?version=1
+    /api/users?version=2
 
-1. Order Management System
+### C. Header Versioning
 
-2. Mobile Application
+    GET /api/users
+    Accept: application/vnd.myapp.v2+json
 
-3. Admin Dashboard
+### D. Custom Header
 
-4. Partner Application
+    GET /api/users
+    API-Version: 2
 
-All these applications consume the same backend APIs.
+---
 
-Now, if we directly modify an existing API's request or response structure, it might break the applications that are already using it.
+## 3. Deprecation
 
-To avoid this problem, we use API versioning.
+Deprecation means an API is **no longer recommended for new development** and may be removed later.
 
-## 3. What are Different approaches to API Versioning
+Usually:
 
-**A URI/URL Versioning (Most common):**
+    Old API
+       ↓
+    Mark as deprecated
+       ↓
+    Give migration time
+       ↓
+    Remove later
 
-This approach is simple, readable, and easy to maintain.
+---
 
-We include the version directly in the API URL.
+## 4. Backward Compatibility
 
-```
-/api/v1/users
-/api/v2/users
-/api/v3/users
-```
+Backward compatibility means **new changes should not break existing clients**.
 
-**B Query Parameter Versioning:**
+Example:
 
-We pass the version as a query parameter.
+    Old Client → New Backend ✓
+    New Client → New Backend ✓
 
-/api/users?version=1
-/api/users?version=2
+API versioning is one way to maintain backward compatibility.
 
-**C Header-Based Versioning:**
+---
 
-We pass the API version through request headers.
+## 5. Bulk Operations
 
-GET /api/users
-Accept: application/vnd.myapp.v2+json
+Bulk operations allow processing **multiple resources in one API request**.
 
-The backend identifies the requested version from the header and returns the corresponding response.
+Instead of:
 
-**D. Custom Header Versioning:**
-We can also use a custom header:
+    POST /users
+    POST /users
+    POST /users
 
-GET /api/users
+Use a bulk endpoint:
 
-API-Version: 2
+    POST /users/bulk
 
+Benefits:
 
-## 4.Deprecation
+- Fewer network requests
+- Better performance
+- Less network overhead
 
-Deprecation means marking an existing API or feature as no longer recommended for new development and informing consumers that it will be removed or unsupported in the future, while keeping it available temporarily for migration.
+---
 
-## 5. Backward compatibility
-Backward compatibility means ensuring that new changes do not break existing clients or integrations that depend on the previous API contract. Api versioning is Backword compatibility.
+## 6. Partial Update
 
-## 6. Bulk operations 
-It allow us to process multiple resources in a single API request, reducing network overhead and improving efficiency compared with making individual requests for every resource
+Partial update means changing **only specific fields** of an existing resource.
 
-## 7. Partial Update
-A partial update allows a client to modify only specific fields of an existing resource without sending or replacing the entire resource. PATCH is commonly used for this purpose
+`PATCH` is commonly used.
+
+Example:
+
+    PATCH /users/123
+
+    {
+      "name": "Vishal"
+    }
+
+Only the `name` is updated.
+
+**Remember:**
+
+    PUT   → Replace/update the resource
+    PATCH → Update specific fields

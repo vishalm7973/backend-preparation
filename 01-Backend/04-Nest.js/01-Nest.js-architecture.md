@@ -1,301 +1,272 @@
-## 1. Why do we need Express.js or NestJS
-Node.js provides the runtime environment to run JavaScript on the server.
+# Express.js & NestJS
 
-Express.js and NestJS provide frameworks and structure that make it easier to build backend applications and APIs on top of Node.js.
+## 1. What is Express.js / NestJS?
 
-## 2. What are Express.js and NestJS
-Express.js and NestJS are both backend frameworks used with Node.js to build APIs and web applications.
+**Node.js** → Runtime that runs JavaScript on the server.
 
-Express.js is lightweight and flexible. It provides tools such as routing and middleware, but it does not force developers to follow a specific application structure. Developers can decide how to organize their controllers, services, routes, and other components.
+**Express.js / NestJS** → Frameworks that make it easier to build backend APIs.
 
-NestJS provides a more structured and predefined architecture with modules, controllers, providers, dependency injection, guards, pipes, and interceptors.
+---
 
-Simple difference
+## 2. Express.js vs NestJS
 
-Express.js → More flexibility and freedom
+### Express.js
+- Lightweight
+- Flexible
+- Less structure
+- Developer decides the architecture
 
-NestJS → More structure and predefined architecture
+### NestJS
+- More structured
+- Modules, Controllers, Services
+- Dependency Injection
+- Guards, Pipes, Interceptors
 
-## 3. Why do we need NestJS if Node.js already exists?
+**Remember:**
 
-**Node.js is a runtime environment that allows us to run JavaScript on the server, and we can build a backend directly using Node.js.**
+    Express → Freedom
+    NestJS  → Structure
 
-However, as the application becomes larger, managing the application structure, dependency management, validation, authentication, and business logic can become difficult.
+---
 
-**NestJS is a backend framework built on top of Node.js that provides a predefined and structured architecture.** It gives us features like modules, controllers, providers, dependency injection, guards, pipes, and interceptors.
+## 3. Why NestJS if Node.js already exists?
 
-This helps us build large backend applications that are easier to organize, maintain, test, and scale.
+**Node.js** is a runtime that runs JavaScript on the server.
 
-So, **Node.js gives us the runtime, while NestJS gives us a structured way to build and manage a backend application.**
+**NestJS** is a backend framework built on Node.js that provides a structured architecture for building large applications.
 
-## 4. What is NestJS Architecture? / What does NestJS give us?
+It provides:
+- Modules
+- Controllers
+- Providers
+- Dependency Injection
+- Guards
+- Pipes
+- Interceptors
 
+**Remember:**
 
-            NestJS Application
-                           │
-                    ┌──────┴──────┐
-                    │   Modules    │
-                    └──────┬──────┘
-                           │
-             ┌─────────────┼─────────────────────────┐
-             │             │                         │
-          Users          Orders                 Payments
-          Module         Module                  Module
-             │             │                       │
-        ┌────┴────┐   ┌────┴────┐             ┌────┴────┐
-        │         │   │         │             │         │
-   Controller  Service Controller Service  Controller   Service
-                   │
-                   ▼
-               Database
+    Node.js  → Runtime
+    NestJS  → Backend framework + Structure
 
+NestJS uses **Express or Fastify** underneath for HTTP handling.
 
+---
 
+## 4. Validation in NestJS
 
-Flow:
+NestJS commonly uses:
 
-```
+**DTO + ValidationPipe + class-validator**
 
-Client
-  ↓
-Request
-  ↓
-Middleware
-  ↓
-Guard
-  ↓
-Pipe
-  ↓
-Controller
-  ↓
-Service
-  ↓
-Interceptor
-  ↓
-Response
-  ↓
-Client
-```
+The DTO defines validation rules.
 
-**1. Modules:**
+ValidationPipe checks the incoming data before it reaches the controller.
 
-A module is a way to organize related functionality into a separate part of the application.
-This makes large applications easier to maintain.
+Invalid data is rejected.
 
-``` Example: 
-@Module({
-  controllers: [UsersController],
-  providers: [UsersService],
-})
-export class UsersModule {}
+**Flow:**
 
+    Request
+       ↓
+    ValidationPipe
+       ↓
+    Controller
 
-src/
-│
-├── users/
-│   ├── users.controller.ts
-│   ├── users.service.ts
-│   ├── users.module.ts
-│   └── users.dto.ts
-│
-├── orders/
-│   ├── orders.controller.ts
-│   ├── orders.service.ts
-│   └── orders.module.ts
-│
-└── app.module.ts
+---
 
+## 5. Exception Filters
 
-```
+Exception Filters handle errors and customize the response sent to the client.
 
-**2. Controllers:**
-The controller handles incoming HTTP requests.
+Common exception filters:
 
+- `NotFoundExceptionFilter` → Handles 404 errors
+- `BadRequestExceptionFilter` → Handles 400 errors
+- `UnauthorizedExceptionFilter` → Handles 401 errors
+- `ForbiddenExceptionFilter` → Handles 403 errors
+- `ConflictExceptionFilter` → Handles 409 errors
+- `HttpExceptionFilter` → Handles general HTTP exceptions
 
-```
-@Controller("users")
-export class UsersController {
+They can be used for:
+- Consistent error responses
+- Handling specific exceptions
+- Centralized error logging
 
-  @Get()
-  getUsers() {
-    return this.usersService.getUsers();
-  }
-}
+**Remember:**
 
-```
+> Exception Filter = Handle and format errors
 
-**3. Providers:**
+---
 
-A provider is a class managed by NestJS that can be injected into other classes. Services are the most common type of provider, and they usually contain the business logic of the application, such as processing data or coordinating database operation. For example, UsersService can be registered as a provider and injected into UsersController.
+# NestJS Lifecycle
 
-**4. Dependency Injection:**
+    Client
+      ↓
+    Middleware
+      ↓
+    Guard
+      ↓
+    Interceptor (before)
+      ↓
+    Pipe
+      ↓
+    Controller
+      ↓
+    Service
+      ↓
+    Database
+      ↓
+    Interceptor (after)
+      ↓
+    Response
+      ↓
+    Client
 
-Dependency Injection is a design pattern where a class receives the dependencies it needs from outside instead of creating them itself. In NestJS, the framework's dependency injection system creates and provides these dependencies, usually through the constructor
+---
 
-**What happens without Dependency Injection? Why we need it ?**
+## 1. Modules
 
-For Example we have userController, 
-So UsersService is a dependency of UsersController.
+A **Module** groups related functionality together.
 
-```
-Without Dependency Injection 
-
-The controller could create the service itself:
-
-class UsersController {
-  usersService = new UsersService();
-
-  getUsers() {
-    return this.usersService.getUsers();
-  }
-}
-
-with Dependency Injection?
-
-class UsersController {
-  constructor(private usersService: UsersService) {}
-
-  getUsers() {
-    return this.usersService.getUsers();
-  }
-}
-
-I need UsersService. Someone else, please give it to me."
-
-NestJS does this for us.
-
-```
-
-**In Simple:**
-
-Dependency Injection is a way of giving a class the things it needs instead of making the class create those things itself.
-
-**5. Middleware:**
-
--- Process request before it reaches controller.
-
-Middleware is used to process an incoming request before it reaches the controller. It is commonly used for things like logging, preprocessing, adding information to the request, etc. For authentication/authorization specifically, NestJS Guards are generally used.
-
-```
 Example:
 
-function logger(req, res, next) {
-  console.log(req.method, req.url);
-  next();
-}
+    UsersModule
+      ├── UsersController
+      └── UsersService
 
-```
+**Remember:**
 
-**6. Guards:**
+> Module = Organize related code
 
-A Guard is used to determine whether a request is allowed to reach the controller. It is commonly used for authentication and authorization, such as checking whether a user is logged in or has the required role or permission.
+---
 
+## 2. Controllers
 
-It Checks:
+A **Controller** handles incoming HTTP requests.
 
-Authentication, 
-Authorization, 
-Role checking, 
-Permission checking
+Example:
 
-**7. Pipe:**
+    GET /users
+        ↓
+    UsersController
 
-A Pipe is used to validate and transform incoming data before it reaches the controller method. For example, we can use pipes to validate DTOs or convert a string route parameter into a number.
+It receives the request and calls the required service.
 
-```
-For Example we get: 
+**Remember:**
 
-GET /users/123
+> Controller = Handle request
 
-You expect 123 to be a number.
+---
 
-A pipe can convert/validate the value:
+## 3. Providers
 
-"123" → 123
+A **Provider** is a class managed by NestJS.
 
-Pipe can reject it because it isn't a valid number.
+Services are the most common type of provider.
 
-@Get(':id')
-getUser(@Param('id', ParseIntPipe) id: number) {
-  return this.usersService.getUser(id);
-}
+They usually contain business logic.
 
-```
+**Remember:**
 
-**8. Interceptor:**
+> Provider = Reusable class managed by NestJS
 
-An Interceptor is used to run logic before and after a controller method executes.So an interceptor can do something before the controller and also after the controller has produced a result.It is commonly used for logging, measuring execution time, transforming responses, and caching.
+---
 
-**9. Exception Filters:**
+## 4. Dependency Injection
 
-Exception filters handle errors thrown by your application and convert them into a proper HTTP response.
+**Dependency Injection (DI)** means a class receives the dependencies it needs instead of creating them itself.
 
-For example, we might want every error to have the same format:
-```
+### Without DI
 
-{
-  "statusCode": 404,
-  "message": "User not found"
-}
+    class UsersController {
+      usersService = new UsersService();
+    }
 
-```
+### With DI
 
-**How do we create an Exception Filter?**
+    class UsersController {
+      constructor(private usersService: UsersService) {}
+    }
 
-Nest.js provides: 
-@Catch()
+NestJS provides `UsersService` automatically.
 
-```
-@Catch(NotFoundException)
-export class NotFoundExceptionFilter
-  implements ExceptionFilter {
+**Remember:**
 
-  catch(exception: NotFoundException, host: ArgumentsHost) {
+> DI = Give the class what it needs
 
-    const response = host.switchToHttp().getResponse();
+---
 
-    response.status(404).json({
-      statusCode: 404,
-      message: "Resource not found",
-    });
-  }
-}
-```
+## 5. Middleware
 
-**10. DTO**
+Middleware runs **before the request reaches the controller**.
 
-DTO (Data Transfer Object) defines the structure of data that is transferred between the client and backend or between application layers.
+Common uses:
 
-**11. Validation:**
+- Logging
+- Request preprocessing
+- Adding data to the request
 
-Validation checks whether incoming data satisfies the required rules before the application processes it.
-If we want to validate Email must be valid email, age must be a number.
-NestJS commonly uses ValidationPipe together with DTOs and validation libraries.
+Example:
 
-**12. Lifecycle Hooks**
+    function logger(req, res, next) {
+      console.log(req.method, req.url);
+      next();
+    }
 
-A lifecycle hook is a method provided by NestJS that lets your application execute code at a particular stage of its lifecycle.
+**Remember:**
 
-For Example:
-onApplicationShutdown()
+> Middleware = Process the request before the controller
 
-This method can run when the application is shutting down.
+---
 
-So:
+## 6. Guards
 
-Signal = notification that shutdown should happen.
+A **Guard** decides whether a request is allowed to continue.
 
-Lifecycle hook = place where your application can execute code during that lifecycle event.
+Common uses:
 
-**Final Answer:**
-Lifecycle hooks in NestJS are methods that allow us to execute custom logic at specific stages of the application or module lifecycle. For example, OnModuleInit runs when a module is initialized, 
+- Authentication
+- Authorization
+- Roles
+- Permissions
 
-OnApplicationBootstrap runs when the application has completed initialization, and 
+**Remember:**
 
-OnApplicationShutdown runs during application shutdown. They are useful for initialization and cleanup tasks such as establishing or closing database connections.
+> Guard = Allow or deny request
 
-## 5. Graceful Shutdown?
+---
 
-Graceful shutdown is the process of safely stopping an application without abruptly terminating ongoing work. When the application receives a shutdown signal, it stops accepting new requests, allows ongoing requests or jobs to complete, closes resources such as database connections and Redis connections, and then terminates the process. This is especially important during deployments and when running applications in containers or orchestration systems because it helps prevent dropped requests and incomplete operations.
+## 7. Pipes
 
-`Stop new work → finish existing work → clean up resources → shut down.`
+A **Pipe** validates or transforms incoming data.
+
+Example:
+
+    "123" → 123
+
+Common uses:
+
+- Validate DTO
+- Convert string to number
+
+**Remember:**
+
+> Pipe = Validate + Transform
+
+---
+
+## 8. Interceptors
+
+An **Interceptor** runs logic before and after a controller method.
+
+Common uses:
+
+- Logging
+- Execution time
+- Response transformation
+- Caching
+
+**Remember:**
+
+> Interceptor = Before + After
