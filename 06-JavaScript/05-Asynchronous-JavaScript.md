@@ -1,93 +1,150 @@
-# Asynchronous JavaScript: Callbacks, Promises, and the Event Loop
+# Asynchronous JavaScript: Callbacks, Promises, and Event Loop
 
-JavaScript executes synchronous code on a call stack. Asynchronous APIs arrange for callbacks or Promise reactions to run later; they do not make a long synchronous function non-blocking.
+## 1. Callbacks & Callback Hell
 
-## Callbacks and callback hell
+A **callback** is a function passed to another function to run later.
 
-A **callback** is a function passed to another function to run after an operation or event. Deeply nested callbacks can make flow, error handling, and sequencing difficult; this is commonly called **callback hell**.
+    function greet(name, callback) {
+      console.log("Hello " + name);
+      callback();
+    }
 
-```javascript
-getUser(userId, (userError, user) => {
-  if (userError) return handleError(userError);
-  getOrders(user.id, (orderError, orders) => {
-    if (orderError) return handleError(orderError);
-    getShipping(orders[0].id, (shippingError, shipping) => {
-      if (shippingError) return handleError(shippingError);
-      show(shipping);
+    greet("John", () => {
+      console.log("Done");
     });
-  });
-});
-```
 
-Use named functions, return early on errors, or compose operations with Promises and `async`/`await` to make control flow easier to follow.
+### Callback Hell
 
-## Promises
+When callbacks are deeply nested, code becomes difficult to read and handle errors.
 
-A Promise represents a result that may be available later. It is pending, fulfilled with a value, or rejected with a reason. A settled Promise does not change state again.
+    getUser(id, (user) => {
+      getOrders(user.id, (orders) => {
+        getPayment(orders[0].id, (payment) => {
+          console.log(payment);
+        });
+      });
+    });
 
-```javascript
-fetchUser(userId)
-  .then((user) => fetchOrders(user.id))
-  .then((orders) => show(orders))
-  .catch((error) => handleError(error))
-  .finally(() => hideSpinner());
-```
+### Remember
 
-- `.then(onFulfilled, onRejected)` registers reactions and returns a new Promise.
-- Return a value from `.then()` to pass it down the chain; throw or return a rejected Promise to pass failure down.
-- `.catch(handler)` handles rejection and itself returns a Promise, so a thrown error in the handler can reject the next link.
-- `.finally(handler)` runs after settlement for cleanup and normally preserves the prior value or rejection.
-- Avoid forgetting to `return` an inner Promise; otherwise the outer chain will not wait for it.
+    Callback → Function passed to another function
 
-## Promise combinators
+    Callback Hell → Too many nested callbacks
 
-| Method | Behavior |
-|---|---|
-| `Promise.all(iterable)` | Fulfills when all fulfill, preserving input order; rejects when one rejects. |
-| `Promise.allSettled(iterable)` | Waits for every input and reports each fulfillment/rejection. |
-| `Promise.race(iterable)` | Settles with the first input to settle. |
-| `Promise.any(iterable)` | Fulfills with the first fulfillment; rejects with `AggregateError` if all reject. |
+Promises and `async/await` make this easier to manage.
 
-```javascript
-const [profile, orders] = await Promise.all([
-  fetchProfile(userId),
-  fetchOrders(userId)
-]);
-```
 
-Use `Promise.all` when all results are required and tasks are independent. It does not cancel remaining operations when one rejects.
+## 2. Promises
 
-## async / await
+A **Promise** represents a result that will be available in the future.
 
-An `async` function always returns a Promise. `await` pauses that function until the Promise settles; it does not block the JavaScript thread.
+A Promise has 3 states:
 
-```javascript
-async function loadOrders(userId) {
-  try {
-    const orders = await fetchOrders(userId);
-    return orders;
-  } catch (error) {
-    throw new Error("Could not load orders", { cause: error });
-  }
-}
-```
+    pending
+    fulfilled
+    rejected
 
-Sequential `await` is appropriate for dependent operations. For independent work, start both and await them together with `Promise.all` to avoid unnecessary sequential latency.
+### Example
 
-## Event loop, tasks, and microtasks
+    fetchUser()
+      .then((user) => {
+        return fetchOrders(user.id);
+      })
+      .then((orders) => {
+        console.log(orders);
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+      .finally(() => {
+        console.log("Done");
+      });
 
-The event loop runs queued work after the current synchronous stack completes. Promise reactions and `queueMicrotask` use the microtask queue; timers and many event callbacks use task queues. After the current task, queued microtasks are generally drained before the next task.
+### Remember
 
-```javascript
-console.log("start");
-setTimeout(() => console.log("timer"), 0);
-Promise.resolve().then(() => console.log("promise"));
-console.log("end");
-// start, end, promise, timer
-```
+    then()    → Success
+    catch()   → Error
+    finally() → Runs after success or failure
 
-The exact event-loop phases and I/O behavior differ between browser JavaScript and Node.js. See the existing [Node.js event-loop notes](../01-Backend/03-Node.js/01-event-loop.md) for Node-specific phases.
+Each `.then()` returns a **new Promise**, so we can chain them.
 
-## Interview reminders
 
-Explain callback error conventions, Promise chaining and error propagation, `async`/`await`, the difference between concurrency and parallel execution, why independent operations can use `Promise.all`, and the task-vs-microtask ordering in output questions.
+## 3. Promise Error Handling
+
+Errors can move down the Promise chain.
+
+    fetchUser()
+      .then((user) => {
+        return fetchOrders(user.id);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+### Important
+
+Always `return` an inner Promise when chaining.
+
+    .then(() => {
+      return fetchOrders();
+    });
+
+Without `return`, the next `.then()` may not wait for it.
+
+### Error Handling
+
+Use `try...catch`.
+
+    async function getData() {
+      try {
+        const data = await fetchData();
+        return data;
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+
+# 6. Event Loop
+
+JavaScript runs synchronous code on the **call stack**.
+
+Asynchronous work is handled by the runtime and its callbacks/Promise reactions are queued for later.
+
+### Important Queues
+
+    Task queue
+    → setTimeout, events, etc.
+
+    Microtask queue
+    → Promises, queueMicrotask
+
+After the current synchronous code finishes, **microtasks are generally processed before the next task**.
+
+### Example
+
+    console.log("start");
+
+    setTimeout(() => {
+      console.log("timer");
+    }, 0);
+
+    Promise.resolve().then(() => {
+      console.log("promise");
+    });
+
+    console.log("end");
+
+Output:
+
+    start
+    end
+    promise
+    timer
+
+### Why?
+
+1. Synchronous code runs first.
+2. Promise callback goes to the microtask queue.
+3. Timer callback goes to a task queue.
+4. Microtasks are processed before the next task.

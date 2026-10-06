@@ -1,62 +1,235 @@
 # JavaScript Functions, `this`, and Currying
 
-## Function forms
+## 1. Function Forms
 
-```javascript
-function declaration(value) { return value; }
-const expression = function (value) { return value; };
-const arrow = (value) => value;
-```
+There are three common ways to create functions:
 
-Function declarations are hoisted with their body. Function expressions and arrow functions are values assigned to bindings and follow the binding's initialization rules. Arrow functions do not have their own `this`, `arguments`, or constructor behavior.
+    // Function Declaration
+    function add(a, b) {
+      return a + b;
+    }
 
-## First-class and higher-order functions
+    // Function Expression
+    const add = function (a, b) {
+      return a + b;
+    };
 
-Functions are values: they can be assigned, passed as arguments, and returned. A **higher-order function** accepts a function, returns one, or both. Array methods such as `map` and `filter` use callbacks.
+    // Arrow Function
+    const add = (a, b) => a + b;
 
-```javascript
-function applyTo(value, transform) {
-  return transform(value);
-}
-applyTo(3, (number) => number * 2); // 6
-```
+### Remember
 
-A **callback** is a function passed to another function to run later or at a chosen point. Callback nesting can become hard to read; Promise chaining and `async`/`await` are common alternatives (see the async notes).
+    Function declaration → Hoisted
+    Function expression  → Stored in a variable
+    Arrow function       → Shorter syntax, no own `this`
 
-## Understanding `this`
+---
 
-For ordinary functions, `this` is primarily determined by how the function is called. In strict mode, a plain function call has `this === undefined`; a method call uses the receiver object. `call`, `apply`, and `bind` explicitly set the receiver. Arrow functions capture `this` lexically from their surrounding code.
+## 2. First-Class & Higher-Order Functions
 
-```javascript
-const account = {
-  balance: 10,
-  showBalance() { return this.balance; }
-};
-account.showBalance(); // 10
+### First-Class Functions
 
-const detached = account.showBalance;
-detached.call(account); // 10
-```
+Functions are treated like values.
 
-- `fn.call(receiver, a, b)` invokes immediately with arguments listed individually.
-- `fn.apply(receiver, [a, b])` invokes immediately with arguments in an array.
-- `fn.bind(receiver, a)` returns a new function with `this` and optional leading arguments fixed.
+They can be:
 
-## Currying and partial application
+- Stored in variables
+- Passed as arguments
+- Returned from functions
 
-**Currying** transforms a function taking several arguments into a chain of single-argument functions. **Partial application** fixes some arguments ahead of time; it does not necessarily turn every remaining argument into a separate call.
+    const greet = () => "Hello";
 
-```javascript
-const add = (left, right) => left + right;
-const curriedAdd = (left) => (right) => left + right;
-curriedAdd(2)(3); // 5
+    function execute(fn) {
+      return fn();
+    }
 
-const addTen = add.bind(null, 10); // partial application
-addTen(5); // 15
-```
+    execute(greet); // "Hello"
 
-Currying is useful for reusable configuration and function composition, but avoid it when it makes APIs harder to read.
+### Higher-Order Function
 
-## Interview reminders
+A function that **accepts another function or returns a function**.
 
-Be ready to distinguish declarations from expressions, explain callback and higher-order function terminology, predict `this` for method/plain/call/bind/arrow cases, and demonstrate a closure-backed function or a curried function.
+    function applyTo(value, transform) {
+      return transform(value);
+    }
+
+    applyTo(3, number => number * 2);
+
+    // 6
+
+`map()`, `filter()`, and `reduce()` are common examples.
+
+---
+
+## 3. Callback
+
+A **callback** is a function passed to another function to be executed later or at a specific point.
+
+    function greet(name, callback) {
+      console.log("Hello " + name);
+      callback();
+    }
+
+    greet("John", () => {
+      console.log("Done");
+    });
+
+    // Hello John
+    // Done
+
+### Remember
+
+    Callback → Function passed to another function
+
+---
+
+## 4. Understanding `this`
+
+For a normal function, `this` depends on **how the function is called**.
+
+### Object Method
+
+    const user = {
+      name: "John",
+
+      greet() {
+        console.log(this.name);
+      }
+    };
+
+    user.greet();
+
+    // John
+
+Here, `this` refers to `user`.
+
+### `call()`
+
+Calls the function immediately and sets `this`.
+
+    function greet() {
+      console.log(this.name);
+    }
+
+    const user = { name: "John" };
+
+    greet.call(user);
+
+    // John
+
+### `apply()`
+
+Same as `call()`, but arguments are passed as an array.
+
+    function add(a, b) {
+      return this.value + a + b;
+    }
+
+    const obj = { value: 10 };
+
+    add.apply(obj, [2, 3]);
+
+    // 15
+
+### `bind()`
+
+Returns a **new function** with `this` fixed.
+
+    function greet() {
+      console.log(this.name);
+    }
+
+    const user = { name: "John" };
+
+    const greetUser = greet.bind(user);
+
+    greetUser();
+
+    // John
+
+### Remember
+
+    call()  → Calls immediately, arguments separately
+    apply() → Calls immediately, arguments as array
+    bind()  → Returns a new function
+
+---
+
+## 5. Arrow Functions & `this`
+
+Arrow functions do **not have their own `this`**.
+
+They use `this` from their surrounding scope.
+
+    const user = {
+      name: "John",
+
+      greet() {
+        const sayHello = () => {
+          console.log(this.name);
+        };
+
+        sayHello();
+      }
+    };
+
+    user.greet();
+
+    // John
+
+### Remember
+
+    Normal function → `this` depends on how it is called
+    Arrow function  → `this` comes from surrounding scope
+
+---
+
+## 6. Currying
+
+**Currying** converts a function with multiple arguments into a chain of functions.
+
+    const add = (a, b) => a + b;
+
+    const curriedAdd = (a) => (b) => a + b;
+
+    console.log(curriedAdd(2)(3));
+
+    // 5
+
+### Easy Example
+
+    const multiply = (a) => (b) => a * b;
+
+    multiply(2)(5);
+
+    // 10
+
+Currying is useful when you want to create reusable functions.
+
+---
+
+## 7. Partial Application
+
+**Partial application** means fixing some arguments in advance.
+
+    const add = (a, b) => a + b;
+
+    const addTen = add.bind(null, 10);
+
+    console.log(addTen(5));
+
+    // 15
+
+Here, `10` is already fixed.
+
+### Currying vs Partial Application
+
+    Currying
+    → One argument at a time
+
+    add(2)(3)
+
+    Partial application
+    → Fix some arguments beforehand
+
+    add.bind(null, 10)

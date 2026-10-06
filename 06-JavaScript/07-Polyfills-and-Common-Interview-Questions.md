@@ -1,137 +1,202 @@
 # JavaScript Polyfills and Common Interview Questions
 
-A **polyfill** supplies a missing API in an older runtime. Interview polyfills demonstrate language mechanics; production code should prefer native implementations and established compatibility libraries when possible. These examples use helper names instead of overwriting built-in prototypes.
+## 1. What is a Polyfill?
 
-## `map` polyfill
+A **polyfill** is code that provides a feature when the environment does not support it.
 
-`map` calls the callback for each present array element and returns a new array of the same length. This version preserves sparse-array holes.
+For interviews, we usually create a simplified version of methods like `map`, `reduce`, `bind`, or `Promise.all`.
 
-```javascript
-function mapPolyfill(array, callback, thisArg) {
-  if (array == null) throw new TypeError("array is null or undefined");
-  if (typeof callback !== "function") throw new TypeError("callback must be a function");
+---
 
-  const source = Object(array);
-  const length = source.length >>> 0;
-  const result = new Array(length);
+## 2. `map()` Polyfill
 
-  for (let index = 0; index < length; index += 1) {
-    if (index in source) {
-      result[index] = callback.call(thisArg, source[index], index, source);
-    }
-  }
-  return result;
-}
-```
+`map()` creates a **new array** by transforming each element.
 
-This is an interview-sized implementation, not a complete specification polyfill for every array-like edge case.
+    function mapPolyfill(array, callback) {
+      const result = [];
 
-## `reduce` polyfill
+      for (let i = 0; i < array.length; i++) {
+        result.push(callback(array[i], i, array));
+      }
 
-The initial value is optional. Without it, reduction starts at the first present element and throws for an empty array with no present elements.
-
-```javascript
-function reducePolyfill(array, callback, initialValue) {
-  if (array == null) throw new TypeError("array is null or undefined");
-  if (typeof callback !== "function") throw new TypeError("callback must be a function");
-
-  const source = Object(array);
-  const length = source.length >>> 0;
-  const hasInitialValue = arguments.length >= 3;
-  let index = 0;
-  let accumulator = initialValue;
-
-  if (!hasInitialValue) {
-    while (index < length && !(index in source)) index += 1;
-    if (index >= length) throw new TypeError("reduce of empty array with no initial value");
-    accumulator = source[index];
-    index += 1;
-  }
-
-  for (; index < length; index += 1) {
-    if (index in source) {
-      accumulator = callback(accumulator, source[index], index, source);
-    }
-  }
-  return accumulator;
-}
-```
-
-## `bind` polyfill (simplified)
-
-`bind` returns a function with a chosen `this` value and optionally pre-filled leading arguments. This interview example handles normal calls; it does not implement constructor behavior or every native edge case.
-
-```javascript
-function bindPolyfill(fn, thisArg, ...boundArgs) {
-  if (typeof fn !== "function") throw new TypeError("target must be a function");
-  return function bound(...callArgs) {
-    return fn.apply(thisArg, [...boundArgs, ...callArgs]);
-  };
-}
-```
-
-## `Promise.all` polyfill
-
-Fulfills with results in input order when every input fulfills; rejects as soon as an input rejects. `Promise.resolve` accepts ordinary values as well as Promises/thenables.
-
-```javascript
-function promiseAllPolyfill(iterable) {
-  return new Promise((resolve, reject) => {
-    const items = Array.from(iterable);
-    const results = new Array(items.length);
-    let remaining = items.length;
-
-    if (remaining === 0) {
-      resolve(results);
-      return;
+      return result;
     }
 
-    items.forEach((item, index) => {
-      Promise.resolve(item).then(
-        (value) => {
-          results[index] = value;
-          remaining -= 1;
-          if (remaining === 0) resolve(results);
-        },
-        reject
-      );
-    });
-  });
-}
-```
+### Example
 
-## Common interview questions
+    const numbers = [1, 2, 3];
 
-### What is the difference between `map` and `forEach`?
+    const result = mapPolyfill(numbers, (n) => n * 2);
 
-`map` returns a new array of callback results. `forEach` returns `undefined` and is typically used for side effects.
+    console.log(result);
+    // [2, 4, 6]
 
-### What is the difference between `slice` and `splice`?
+### Remember
 
-`slice` returns a copy of a range without mutating the source. `splice` mutates the source by inserting/removing items and returns the removed items.
+    map → New array
+    forEach → undefined
 
-### What is a closure?
 
-A function retaining access to its lexical environment after the outer function has returned. Closures enable private state and function factories.
+## 3. `reduce()` Polyfill
 
-### What is callback hell, and how do Promises help?
+`reduce()` combines array values into **one result**.
 
-Deeply nested callbacks obscure sequencing and error handling. Promises compose asynchronous work through returned chains; `async`/`await` provides sequential-looking syntax over Promises.
+    function reducePolyfill(array, callback, initialValue) {
+      let result = initialValue;
 
-### How does `this` differ in an arrow function?
+      for (let i = 0; i < array.length; i++) {
+        result = callback(result, array[i], i, array);
+      }
 
-An arrow function captures `this` from its lexical surrounding scope; it does not create its own `this` binding.
+      return result;
+    }
 
-### What is the event-loop order in a simple example?
+### Example
 
-Synchronous statements run first; Promise microtasks normally run after the current task and before the next timer task. Node.js adds its own event-loop phases and APIs.
+    const numbers = [1, 2, 3];
 
-### Is JavaScript pass-by-reference?
+    const total = reducePolyfill(
+      numbers,
+      (sum, n) => sum + n,
+      0
+    );
 
-JavaScript passes arguments by value. For objects, the value is a reference, so a function can mutate the referenced object but cannot reassign the caller's variable binding.
+    console.log(total);
+    // 6
 
-### What is the difference between `var`, `let`, and `const`?
+### Important
 
-`var` is function-scoped; `let` and `const` are block-scoped and have a TDZ before initialization. `const` prevents rebinding but does not make an object immutable.
+If no initial value is provided, native `reduce()` starts with the first element.
 
-For each answer, demonstrate with a small example and mention an edge case or tradeoff rather than relying only on a memorized definition.
+---
+
+## 4. `bind()` Polyfill
+
+`bind()` returns a **new function** with `this` fixed.
+
+    function bindPolyfill(fn, thisArg, ...boundArgs) {
+      return function (...args) {
+        return fn.apply(
+          thisArg,
+          [...boundArgs, ...args]
+        );
+      };
+    }
+
+### Example
+
+    const user = {
+      name: "John"
+    };
+
+    function greet(message) {
+      console.log(message, this.name);
+    }
+
+    const greetUser = bindPolyfill(
+      greet,
+      user,
+      "Hello"
+    );
+
+    greetUser();
+
+    // Hello John
+
+### Remember
+
+    bind() → Returns a new function
+    call() → Calls immediately
+    apply() → Calls immediately
+
+
+## 5. `Promise.all()` Polyfill
+
+`Promise.all()` waits for **all Promises**.
+
+If one rejects, the result rejects.
+
+    function promiseAllPolyfill(promises) {
+      return new Promise((resolve, reject) => {
+        const results = [];
+        let completed = 0;
+
+        if (promises.length === 0) {
+          resolve([]);
+          return;
+        }
+
+        promises.forEach((promise, index) => {
+          Promise.resolve(promise)
+            .then((value) => {
+              results[index] = value;
+              completed++;
+
+              if (completed === promises.length) {
+                resolve(results);
+              }
+            })
+            .catch(reject);
+        });
+      });
+    }
+
+### Example
+
+    promiseAllPolyfill([
+      Promise.resolve(1),
+      Promise.resolve(2),
+      Promise.resolve(3)
+    ]).then(console.log);
+
+    // [1, 2, 3]
+
+### Remember
+
+    Promise.all()
+    → Waits for all
+    → Keeps input order
+    → Rejects if one rejects
+
+---
+
+## Is JavaScript Pass-by-Reference?
+
+JavaScript is **pass-by-value**.
+
+For objects, the value being passed is a **reference to the object**.
+
+    function changeUser(user) {
+      user.name = "Alex";
+    }
+
+    const user = {
+      name: "John"
+    };
+
+    changeUser(user);
+
+    console.log(user.name);
+
+    // Alex
+
+The object was modified because both references point to the same object.
+
+But reassigning the parameter does not change the caller's variable:
+
+    function changeUser(user) {
+      user = {
+        name: "Alex"
+      };
+    }
+
+    const user = {
+      name: "John"
+    };
+
+    changeUser(user);
+
+    console.log(user.name);
+
+    // John
+

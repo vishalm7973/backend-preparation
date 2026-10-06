@@ -1,76 +1,213 @@
 # JavaScript Scope, Hoisting, and Closures
 
-## Execution context and call stack
+## 1. Execution Context & Call Stack
 
-When JavaScript runs a function, it creates an execution context containing its local bindings and execution state. Calls are placed on the **call stack**; a returned function's context is removed. A very deep unbounded recursion can overflow the stack.
+When JavaScript runs a function, it creates an **execution context**.
 
-## Lexical scope and scope chain
+Function calls are stored in the **call stack**.
 
-**Lexical scope** means a function's access to variables is determined by where the function is written, not where it is called. When a name is not found locally, JavaScript searches outward through enclosing scopes; this is the **scope chain**.
+    function greet() {
+      console.log("Hello");
+    }
 
-```javascript
-const outerValue = "outer";
+    greet();
 
-function makeReader() {
-  const innerValue = "inner";
-  return function read() {
-    return `${outerValue}-${innerValue}`;
-  };
-}
+    // greet() is added to the call stack
+    // function finishes → removed from the stack
 
-const read = makeReader();
-read(); // "outer-inner"
-```
+Too much recursion can cause **stack overflow**.
 
-`var` is function-scoped. `let` and `const` are block-scoped, so bindings declared inside `{ ... }` do not escape that block.
+---
 
-## Hoisting and the temporal dead zone
+## 2. Lexical Scope & Scope Chain
 
-Declarations are processed before normal statements execute, but not all declarations behave the same way:
+**Lexical scope** means a function can access variables based on **where it is written**, not where it is called.
 
-- A function declaration can generally be called before its textual position.
-- A `var` declaration is hoisted and initialized to `undefined`.
-- `let` and `const` bindings exist from the start of their scope but cannot be accessed before their declaration is evaluated. That interval is the **temporal dead zone (TDZ)**.
-- Function expressions and arrow functions assigned to `let`/`const` bindings follow the binding's TDZ rules.
+If JavaScript cannot find a variable locally, it searches the outer scope. This is the **scope chain**.
 
-```javascript
-console.log(value); // undefined
-var value = 3;
+    const outer = "outer";
 
-// console.log(rate); // ReferenceError (TDZ)
-let rate = 2;
-```
+    function parent() {
+      const inner = "inner";
 
-## Closures
+      function child() {
+        console.log(outer);
+        console.log(inner);
+      }
 
-A **closure** is a function together with access to variables from its lexical environment. The function can continue using those bindings after the outer function has returned.
+      child();
+    }
 
-```javascript
-function createCounter() {
-  let count = 0;
-  return function increment() {
-    count += 1;
-    return count;
-  };
-}
+    parent();
 
-const next = createCounter();
-next(); // 1
-next(); // 2
-```
+    // outer
+    // inner
 
-Closures are useful for private state, callbacks, factories, and currying. They also retain references: a long-lived closure can keep otherwise-unused data in memory.
+### Remember
 
-## Classic loop closure interview question
+    Lexical scope → Where the function is written
+    Scope chain   → Search from inner scope → outer scope
 
-`var` creates one function-scoped binding shared by loop iterations; `let` creates a per-iteration binding in a `for` loop.
+`var` → Function-scoped
 
-```javascript
-const callbacks = [];
-for (let index = 0; index < 3; index += 1) {
-  callbacks.push(() => index);
-}
-callbacks.map((callback) => callback()); // [0, 1, 2]
-```
+`let` / `const` → Block-scoped
 
-Interview prompts: explain lexical scope vs. dynamic scope, the scope chain, what is hoisted, why TDZ exists, and how closures retain state.
+    {
+      let x = 10;
+      const y = 20;
+    }
+
+    console.log(x); // Error
+    console.log(y); // Error
+
+---
+
+## 3. Hoisting & TDZ
+
+**Hoisting** means JavaScript makes declarations available before the code is executed.
+
+But different declarations behave differently.
+
+    var       → Hoisted as undefined
+    let/const → Hoisted but in TDZ
+    function  → Fully hoisted
+
+**TDZ** is the time between entering a scope and reaching the `let` or `const` declaration.
+
+During this time, you cannot access the variable.
+
+    console.log(age); // ReferenceError
+
+    let age = 25;
+
+### `var`
+
+`var` is hoisted and initialized with `undefined`.
+
+    console.log(value);
+
+    var value = 3;
+
+    // undefined
+
+### `let` / `const`
+
+They are hoisted but **cannot be accessed before declaration**.
+
+This period is called the **Temporal Dead Zone (TDZ)**.
+
+    console.log(age); // ReferenceError
+
+    let age = 25;
+
+### Function Declaration
+
+Function declarations can generally be called before they are written.
+
+    greet();
+
+    function greet() {
+      console.log("Hello");
+    }
+
+    // Hello
+
+ ### Function Expression
+
+A function expression is assigned to a variable.
+
+    greet();
+
+    var greet = function () {
+      console.log("Hello");
+    };
+
+    // undefined is not a function
+    // TypeError
+
+Why?
+
+`var greet` is hoisted, but only the variable declaration is hoisted.
+
+    var greet; // undefined
+
+    greet();   // TypeError
+
+    greet = function () {
+      console.log("Hello");
+    };
+
+### Remember
+
+    var        → Hoisted + initialized as undefined
+    let/const  → Hoisted + TDZ
+    function   → Can be called before declaration
+
+---
+
+## 4. Closures
+
+A **closure** is a function that remembers variables from its outer scope.
+
+The function can still access those variables even after the outer function has finished.
+
+    function createCounter() {
+      let count = 0;
+
+      return function increment() {
+        count++;
+        return count;
+      };
+    }
+
+    const counter = createCounter();
+
+    console.log(counter()); // 1
+    console.log(counter()); // 2
+    console.log(counter()); // 3
+
+`count` is remembered by the inner function.
+
+### Common Uses
+
+- Private state
+- Callbacks
+- Function factories
+- Currying
+
+### Remember
+
+> Closure = Function + access to its outer variables
+
+---
+
+## 5. Loop Closure Interview Question
+
+With `let`, each loop iteration gets its own binding.
+
+    const callbacks = [];
+
+    for (let index = 0; index < 3; index++) {
+      callbacks.push(() => index);
+    }
+
+    console.log(callbacks.map(callback => callback()));
+
+    // [0, 1, 2]
+
+With `var`, there is one shared function-scoped variable.
+
+    const callbacks = [];
+
+    for (var index = 0; index < 3; index++) {
+      callbacks.push(() => index);
+    }
+
+    console.log(callbacks.map(callback => callback()));
+
+    // [3, 3, 3]
+
+### Remember
+
+    let → New binding for each iteration
+    var → Same shared binding

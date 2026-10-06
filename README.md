@@ -150,6 +150,22 @@ This repository is a set of study notes and practice exercises for JavaScript, b
 - [Greedy, backtracking, and DP](05-DSA%20Pattern/04-Greedy-Backtracking-DP.md)
 - [Advanced DSA patterns](05-DSA%20Pattern/05-Advanced-DSA-Patterns.md)
 
+### Frontend
+
+#### React
+
+- [React basics](07-Frontend/03-React/01-react-basics.md)
+- [Rendering and component lifecycle](07-Frontend/03-React/02-rendering-and-component-lifecycle.md)
+- [React Hooks](07-Frontend/03-React/03-react-hooks.md)
+- [State management](07-Frontend/03-React/04-state-management.md)
+
+#### Redux
+
+- [Redux basics](07-Frontend/04-Redux/01-basics.md)
+- [Redux Toolkit](07-Frontend/04-Redux/02-toolkit.md)
+- [React Redux hooks, middleware, and async](07-Frontend/04-Redux/03-async.md)
+- [Choosing Redux, Context, or local state](07-Frontend/04-Redux/04-state-management.md)
+
 ## How to Use These Notes
 
 The numbered files provide a suggested order within each topic area. System Design notes are short interview refreshers: they focus on key ideas, tradeoffs, examples, and concise answers. JavaScript practice files contain small exercises that can be run with Node.js.

@@ -1,74 +1,210 @@
 # JavaScript Prototypes, Modules, Errors, and Memory
 
-## Objects and prototypes
+## 1. Objects & Prototypes
 
-Objects can inherit properties from another object through their internal prototype link. When a property is not found on the object itself, JavaScript looks up the **prototype chain**.
+Objects can inherit properties and methods from another object.
 
-```javascript
-const base = { describe() { return "base"; } };
-const item = Object.create(base);
-item.name = "example";
-item.describe(); // "base" (found on base)
-Object.hasOwn(item, "name"); // true
-Object.hasOwn(item, "describe"); // false
-```
+If JavaScript cannot find a property on the object, it looks up the **prototype chain**.
 
-`class` syntax provides a familiar way to define constructors and methods, but JavaScript class inheritance is built on prototypes.
+    const base = {
+      greet() {
+        return "Hello";
+      }
+    };
 
-```javascript
-class User {
-  constructor(name) { this.name = name; }
-  greet() { return `Hi, ${this.name}`; }
-}
-class Admin extends User {
-  canManage() { return true; }
-}
-```
+    const user = Object.create(base);
 
-Methods defined on a class's prototype are shared by instances rather than created anew on every instance. `instanceof` checks a prototype relationship; it may not be reliable across separate JavaScript realms.
+    user.name = "John";
 
-## ES Modules and CommonJS
+    console.log(user.name);
+    // John
 
-- **ES Modules (ESM):** `import` / `export`; static module structure; supports live bindings and top-level `await` in supported runtimes.
-- **CommonJS (CJS):** `require()` / `module.exports`; common in older Node.js code and still supported by Node.js.
-- A project's `package.json`, file extensions, and runtime configuration affect how Node interprets module files. Avoid casually mixing module systems; interop can have edge cases.
+    console.log(user.greet());
+    // Hello
 
-```javascript
-// ESM
-export function add(a, b) { return a + b; }
-import { add } from "./math.js";
-```
+`greet()` is not directly inside `user`. JavaScript finds it in `base`.
 
-```javascript
-// CommonJS
-module.exports = { add };
-const { add } = require("./math.cjs");
-```
+### Remember
 
-## Error handling
+    Object property found?
+    ↓
+    Yes → Use it
+    No  → Search prototype chain
 
-Use `throw` to report failure and `try`/`catch` to handle it at a boundary where recovery or useful context is available. `finally` is for cleanup that must happen regardless of success or failure.
+---
 
-```javascript
-try {
-  const value = JSON.parse(input);
-  processValue(value);
-} catch (error) {
-  logger.error({ error }, "Could not process input");
-  throw error;
-} finally {
-  releaseResource();
-}
-```
+## 2. Classes & Prototypes
 
-Prefer `Error` objects over throwing strings, preserve causes when wrapping errors, and avoid swallowing failures without a deliberate fallback.
+JavaScript `class` is mainly a cleaner syntax built on top of prototypes.
 
-## Memory and garbage collection
+    class User {
+      constructor(name) {
+        this.name = name;
+      }
 
-JavaScript engines automatically reclaim objects that are no longer reachable from live references. Garbage collection does not prevent leaks: an object remains live while reachable through a global variable, closure, cache, event listener, timer, or other reference.
+      greet() {
+        return `Hello ${this.name}`;
+      }
+    }
 
-Common leak sources include unbounded caches, listeners that are never removed, timers that are never cleared, and closures retaining large object graphs. `WeakMap` and `WeakSet` do not keep object keys alive by themselves, but they are not a universal substitute for lifecycle cleanup.
+    const user = new User("John");
 
-## Interview reminders
+    console.log(user.greet());
+    // Hello John
 
-Explain the prototype chain, how class syntax relates to prototypes, the module system used by the application, where errors should be handled, and how unwanted references can cause memory leaks.
+Methods like `greet()` are stored on the class prototype and shared by instances.
+
+### Inheritance
+
+    class Admin extends User {
+      canManage() {
+        return true;
+      }
+    }
+
+    const admin = new Admin("Alex");
+
+    admin.greet();
+    // Hello Alex
+
+    admin.canManage();
+    // true
+
+### `instanceof`
+
+Checks whether an object is related to a constructor's prototype.
+
+    admin instanceof Admin;
+    // true
+
+    admin instanceof User;
+    // true
+
+
+# 3. ES Modules vs CommonJS
+
+JavaScript has two common module systems in Node.js.
+
+### ES Modules (ESM)
+
+Uses `import` and `export`.
+
+    // math.js
+    export function add(a, b) {
+      return a + b;
+    }
+
+    // app.js
+    import { add } from "./math.js";
+
+    console.log(add(2, 3));
+    // 5
+
+### CommonJS (CJS)
+
+Uses `require()` and `module.exports`.
+
+    // math.js
+    function add(a, b) {
+      return a + b;
+    }
+
+    module.exports = { add };
+
+    // app.js
+    const { add } = require("./math");
+
+    console.log(add(2, 3));
+    // 5
+
+### Remember
+
+    ESM → import / export
+    CJS → require / module.exports
+
+
+# 4. Error Handling
+
+Use `throw` to create/report an error.
+
+Use `try...catch` to handle errors.
+
+Use `finally` for cleanup.
+
+    try {
+      const data = JSON.parse(input);
+
+      console.log(data);
+    } catch (error) {
+      console.log("Invalid JSON");
+    } finally {
+      console.log("Done");
+    }
+
+### Example
+
+    function divide(a, b) {
+      if (b === 0) {
+        throw new Error("Cannot divide by zero");
+      }
+
+      return a / b;
+    }
+
+    try {
+      divide(10, 0);
+    } catch (error) {
+      console.log(error.message);
+    }
+
+Prefer throwing `Error` objects instead of strings.
+
+    throw new Error("Something went wrong");
+
+
+# 5. Memory & Garbage Collection
+
+JavaScript automatically removes objects that are **no longer reachable**.
+
+This process is called **Garbage Collection (GC)**.
+
+    let user = {
+      name: "John"
+    };
+
+    user = null;
+
+The object is no longer reachable through `user`, so it can eventually be cleaned by the garbage collector.
+
+### Important
+
+Garbage collection does **not** prevent memory leaks.
+
+If something still holds a reference to an object, it can remain in memory.
+
+### Common Memory Leak Sources
+
+- Global variables
+- Unbounded caches
+- Event listeners not removed
+- Timers not cleared
+- Closures holding large objects
+
+
+If `cache` keeps growing forever, memory usage can keep increasing.
+
+### WeakMap / WeakSet
+
+`WeakMap` and `WeakSet` do not keep their object keys alive by themselves.
+
+    const weakMap = new WeakMap();
+
+    let user = {
+      name: "John"
+    };
+
+    weakMap.set(user, "data");
+
+    user = null;
+
+The object can now become eligible for garbage collection.
