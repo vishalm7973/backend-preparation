@@ -1,44 +1,118 @@
 # Redux Basics
 
-Redux is a predictable state-management library. It keeps shared application state in a store and changes that state through explicit actions and reducers. It is useful when state is shared across distant components, has coordinated transitions, or benefits from centralized debugging.
+Redux is a **state-management library** used to manage shared application state.
 
-## Core concepts
+It is useful when many components need the same state or when state changes are complex.
 
-- **Store:** Holds the current Redux state tree and provides `getState`, `dispatch`, and `subscribe` behavior. In modern applications, create it with Redux Toolkit's `configureStore`.
-- **State:** The current data in the store. Treat it as read-only; only reducers calculate the next state.
-- **Action:** A plain object describing what happened, usually with a `type` and optional `payload`.
-- **Reducer:** A pure function of `(previousState, action)` that returns the next state. It should not perform I/O, mutate external data, or depend on time/randomness.
-- **Dispatch:** Sends an action through the store's middleware and reducer pipeline.
-- **Selector:** A function that reads or derives a value from the state tree.
+---
 
-## Redux data flow
+## Core Concepts
 
-```text
-UI event -> dispatch(action) -> reducer calculates next state
-   ^                                      |
-   |                                      v
-   +--- selector reads updated state <- store notifies subscribers
-```
+- **Store** → Holds the application state.
+- **State** → Current data stored in Redux.
+- **Action** → Describes what happened.
+- **Reducer** → Decides how the state should change.
+- **Dispatch** → Sends an action.
+- **Selector** → Reads data from the store.
 
-The flow is one-way. A view dispatches an intent; reducers compute the state transition; subscribed UI reads the new state.
+---
 
-## Plain action and reducer example
+## Redux Data Flow
 
-```javascript
-const incremented = { type: "counter/incremented" };
+    UI
+     ↓
+    dispatch(action)
+     ↓
+    Reducer
+     ↓
+    New State
+     ↓
+    Store
+     ↓
+    Selector
+     ↓
+    UI updates
 
-function counterReducer(state = { value: 0 }, action) {
-  switch (action.type) {
-    case "counter/incremented":
-      return { ...state, value: state.value + 1 };
-    default:
-      return state;
-  }
-}
-```
+Redux follows a **one-way data flow**.
 
-This illustrates the Redux model. In production Redux applications, Redux Toolkit's `createSlice` and `configureStore` reduce boilerplate and are the recommended starting point.
+---
 
-## Interview reminders
+## Action
 
-Explain the action -> reducer -> store -> selector flow, why reducers are pure, and why Redux is for shared client state rather than a requirement for every React component. For Toolkit setup and generated actions, see [Redux Toolkit](02-toolkit.md).
+An action is usually an object with a `type` and optional `payload`.
+
+    const action = {
+      type: "counter/incremented",
+      payload: 1
+    };
+
+### Remember
+
+    Action → What happened?
+
+---
+
+## Reducer
+
+A reducer is a function that receives the current state and action and returns the new state.
+
+    function counterReducer(state = { value: 0 }, action) {
+      switch (action.type) {
+        case "counter/incremented":
+          return {
+            ...state,
+            value: state.value + 1
+          };
+
+        default:
+          return state;
+      }
+    }
+
+Reducers should be **pure** and should not perform API calls, random operations, or other side effects.
+
+### Remember
+
+    Reducer → How should state change?
+
+---
+
+## Dispatch
+
+`dispatch()` sends an action to Redux.
+
+    dispatch({
+      type: "counter/incremented"
+    });
+
+### Remember
+
+    Dispatch → Send the action
+
+---
+
+## Selector
+
+A selector reads data from the Redux store.
+
+    const count = useSelector(
+      (state) => state.counter.value
+    );
+
+### Remember
+
+    Selector → Read state
+
+---
+
+## Store
+
+The store holds the application's Redux state.
+
+Modern Redux applications usually create the store using **Redux Toolkit's `configureStore`**.
+
+---
+
+## Interview Answer
+
+> Redux is a state-management library for shared client state. Components dispatch actions, reducers calculate the new state, the store holds that state, and selectors read the required data.

@@ -1,71 +1,120 @@
 # Redux React Hooks, Middleware, and Async Work
 
-## React Redux hooks
+## 1. React Redux Hooks
 
-Wrap the React application in `<Provider store={store}>` once near its root so nested components can access the Redux store.
+Wrap the app with `Provider` so components can access the Redux store.
 
-- **`useDispatch()`** returns the store's dispatch function. Components dispatch actions in response to user events.
-- **`useSelector(selector)`** subscribes to the store and returns the selected value. By default React Redux compares the previous and next result with strict reference equality; selectors should return stable values when practical.
+    <Provider store={store}>
+      <App />
+    </Provider>
 
-```jsx
-import { useDispatch, useSelector } from "react-redux";
-import { increment } from "./counter-slice.js";
+### `useSelector`
 
-function Counter() {
-  const value = useSelector((state) => state.counter.value);
-  const dispatch = useDispatch();
-  return <button onClick={() => dispatch(increment())}>{value}</button>;
-}
-```
+Used to **read data from the Redux store**.
 
-Avoid returning a new object or array from an inline selector on every store update unless using a memoized selector or an appropriate equality function; otherwise the component can re-render unnecessarily.
+    const value = useSelector(
+      (state) => state.counter.value
+    );
 
-## Middleware
+### `useDispatch`
 
-Middleware sits between dispatching an action and the reducer. It can inspect, log, delay, transform, or handle dispatched values. Middleware is commonly used for async workflows, analytics, and cross-cutting behavior.
+Used to **dispatch actions**.
 
-Redux Toolkit installs thunk middleware by default. A thunk is a function that can dispatch actions over time and perform asynchronous work; reducers themselves remain synchronous and pure.
+    const dispatch = useDispatch();
 
-## `createAsyncThunk`
+    dispatch(increment());
 
-`createAsyncThunk` creates a thunk action and lifecycle actions: `pending`, `fulfilled`, and `rejected`. Handle those in a slice's `extraReducers`, keeping loading/error status in state.
+### Remember
 
-```javascript
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+    useSelector → Read Redux state
+    useDispatch → Send actions
 
-export const loadUser = createAsyncThunk(
-  "users/loadUser",
-  async (userId, { rejectWithValue }) => {
-    const response = await fetch(`/api/users/${userId}`);
-    if (!response.ok) return rejectWithValue("Could not load user");
-    return response.json();
-  }
-);
+---
 
-const userSlice = createSlice({
-  name: "user",
-  initialState: { data: null, status: "idle", error: null },
-  reducers: {},
-  extraReducers(builder) {
-    builder
-      .addCase(loadUser.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-      })
-      .addCase(loadUser.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.data = action.payload;
-      })
-      .addCase(loadUser.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload ?? action.error.message;
-      });
-  }
-});
-```
+## 2. Middleware
 
-Production API handling should also consider request cancellation, stale responses, retries, and whether this data belongs in a query cache. For standard server-state fetching/caching, evaluate RTK Query rather than hand-building the same lifecycle for every endpoint.
+Middleware runs **between dispatching an action and the reducer**.
 
-## Interview reminders
+    dispatch(action)
+          ↓
+      Middleware
+          ↓
+       Reducer
+          ↓
+      New State
 
-Explain which code runs in middleware vs. reducers, how `createAsyncThunk` models request states, how a component subscribes with `useSelector`, and why a selector returning a new reference can trigger extra renders.
+Middleware can be used for:
+
+- Async operations
+- Logging
+- Analytics
+- Other common application logic
+
+Redux Toolkit includes **thunk middleware by default**.
+
+### Remember
+
+> Middleware → Runs between `dispatch` and the reducer.
+
+Reducers should remain **pure and synchronous**.
+
+---
+
+## 3. `createAsyncThunk`
+
+`createAsyncThunk` is used for common **async operations**, such as API calls.
+
+It automatically provides three states:
+
+    pending   → Request started
+    fulfilled → Request succeeded
+    rejected  → Request failed
+
+Example:
+
+    export const loadUser = createAsyncThunk(
+      "users/loadUser",
+      async (userId) => {
+        const response = await fetch(`/api/users/${userId}`);
+        return response.json();
+      }
+    );
+
+Handle these states inside `extraReducers`:
+
+    extraReducers(builder) {
+      builder
+        .addCase(loadUser.pending, (state) => {
+          state.status = "loading";
+        })
+        .addCase(loadUser.fulfilled, (state, action) => {
+          state.status = "succeeded";
+          state.data = action.payload;
+        })
+        .addCase(loadUser.rejected, (state) => {
+          state.status = "failed";
+        });
+    }
+
+---
+
+## 4. Selector Important Point
+
+`useSelector` checks whether the selected result changed.
+
+Avoid creating a new object/array unnecessarily:
+
+    // Can cause unnecessary re-renders
+    useSelector((state) => ({
+      name: state.user.name
+    }));
+
+Prefer selecting the value directly:
+
+    useSelector((state) => state.user.name);
+
+---
+
+### Interview Answer
+
+> `useSelector` reads data from the Redux store, while `useDispatch` sends actions. Middleware runs between dispatch and the reducer and is commonly used for async work. `createAsyncThunk` simplifies API requests by providing pending, fulfilled, and rejected states.

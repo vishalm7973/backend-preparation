@@ -152,6 +152,14 @@ This repository is a set of study notes and practice exercises for JavaScript, b
 
 ### Frontend
 
+#### HTML
+
+- [HTML interview questions](07-Frontend/01-Html/01-interview-questions.md)
+
+#### CSS
+
+- [CSS interview questions](07-Frontend/02-CSS/01-interview-questions.md)
+
 #### React
 
 - [React basics](07-Frontend/03-React/01-react-basics.md)

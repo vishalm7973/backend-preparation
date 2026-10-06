@@ -1,130 +1,262 @@
 # React Basics
 
-## What Is React?
+## 1. What Is React?
 
-React is a JavaScript library for building user interfaces from reusable components. You describe the UI for the current props and state; React updates the rendered interface when those inputs change.
+React is a **JavaScript library for building user interfaces** using reusable components.
 
-## Why React?
+You describe **what the UI should look like**, and React updates it when state or props change.
 
-- Breaks interfaces into reusable, composable components.
-- Provides a declarative model for describing UI state.
-- Supports local and shared state patterns, a broad ecosystem, and multiple rendering strategies.
-- Does not prescribe routing, data fetching, or every application architecture choice; these are often supplied by libraries or frameworks.
+---
 
-## What Is Vite, and Why Use It with React?
+## 2. Why React?
 
-**React** is the UI library. **Vite** is a development server and build tool that can scaffold and run a React project. It serves the app during development with fast updates (hot module replacement) and builds optimized static assets for production.
+- Reusable components
+- Declarative UI
+- Easy state management
+- Component composition
+- Large ecosystem
 
-React does not require Vite. A small demo can load React from a CDN without a project build setup, and production apps can use other tools or frameworks. However, JSX and many modern JavaScript features need transformation for broad browser support, while real apps also need dependency handling, asset processing, and a production build. Vite provides these common pieces with little setup; it is not a React replacement and does not itself add routing, state management, or a backend.
+React itself does not provide everything like routing or data fetching. Other libraries/frameworks can be used for these.
 
-```bash
-npm create vite@latest my-react-app -- --template react
-cd my-react-app
-npm install
-npm run dev
-```
+---
 
-Use the `react-ts` template for a TypeScript starter. For a client-rendered React app, Vite is a common lightweight choice; for routing, server rendering, or full-stack features, a React framework may be more suitable. Create React App is deprecated for new projects, so prefer a maintained build tool or framework.
+## 3. React vs Vite
 
-## React vs. Vanilla JavaScript
+**React** → UI library
 
-With vanilla JavaScript, application code commonly queries and mutates DOM nodes directly. In React, application code updates state and describes the desired UI; React reconciles the component output and commits necessary DOM changes.
+**Vite** → Development server and build tool
 
-```javascript
-// Vanilla JavaScript: imperative DOM update
-document.querySelector("#count").textContent = String(count);
+Vite helps you create and run a React project with fast development updates.
 
-// React: declarative UI
-function Counter({ count }) {
-  return <p>{count}</p>;
-}
-```
+    npm create vite@latest my-app -- --template react
+    cd my-app
+    npm install
+    npm run dev
 
-React still uses the browser DOM. It manages updates; it does not replace the DOM.
+For TypeScript:
 
-## Components and Functional Components
+    npm create vite@latest my-app -- --template react-ts
 
-A component is a reusable unit of UI. Modern React primarily uses function components. Component names start with a capital letter, and rendering should be pure: the same props, state, and context should produce the same UI.
+### Remember
 
-```jsx
-function Greeting({ name }) {
-  return <h1>Hello, {name}</h1>;
-}
-```
+    React → Builds UI
+    Vite  → Runs and builds the project
 
-## JSX
+Vite is **not a replacement for React**.
 
-JSX is syntax that lets JavaScript code describe a UI tree. It is transformed by the build tool into React element creation calls. Use `{}` to embed JavaScript expressions; JSX uses `className` for CSS classes and requires one parent element or a fragment.
+---
 
-```jsx
-function Status({ online }) {
-  return (
+## 4. React vs Vanilla JavaScript
+
+### Vanilla JavaScript
+
+You directly modify the DOM.
+
+    document.querySelector("#count").textContent = count;
+
+### React
+
+You update state and describe the UI.
+
+    function Counter({ count }) {
+      return <p>{count}</p>;
+    }
+
+### Remember
+
+    Vanilla JS → Direct DOM manipulation
+    React      → Declarative UI + React manages updates
+
+React still uses the browser DOM.
+
+---
+
+## 5. Components
+
+A component is a **reusable piece of UI**.
+
+Modern React mainly uses function components.
+
+    function Greeting({ name }) {
+      return <h1>Hello, {name}</h1>;
+    }
+
+Use it:
+
+    <Greeting name="John" />
+
+Component names should start with a **capital letter**.
+
+---
+
+## 6. JSX
+
+JSX allows us to write UI-like syntax inside JavaScript.
+
+    function Status({ online }) {
+      return (
+        <p className={online ? "online" : "offline"}>
+          {online ? "Online" : "Offline"}
+        </p>
+      );
+    }
+
+Use `{}` to put JavaScript expressions inside JSX.
+
+    <h1>{name}</h1>
+
+Use `className` instead of `class`.
+
+A component should return one parent element or a fragment:
+
     <>
-      <p className={online ? "online" : "offline"}>
-        {online ? "Online" : "Offline"}
-      </p>
+      <h1>Hello</h1>
+      <p>Welcome</p>
     </>
-  );
-}
-```
 
-JSX expressions are not arbitrary statements: use expressions such as conditional expressions or `array.map`, not a `for` statement directly inside braces.
+---
 
-## Props
+## 7. Props
 
-Props are read-only inputs passed from a parent to a child. A child should not mutate its props; it can request a change by calling a callback supplied by its parent.
+**Props** are data passed from a parent component to a child.
 
-```jsx
-function Product({ title, price }) {
-  return <p>{title}: ${price}</p>;
-}
-<Product title="Keyboard" price={80} />
-```
+Props are **read-only**.
 
-## State
+    function Product({ title, price }) {
+      return <p>{title}: ${price}</p>;
+    }
 
-State is data owned by a component that can change over time. Updating state schedules a render; it does not mutate the current render's state snapshot. Use the setter returned by `useState` rather than assigning to a state variable.
+    <Product title="Keyboard" price={80} />
 
-```jsx
-import { useState } from "react";
+### Remember
 
-function Counter() {
-  const [count, setCount] = useState(0);
-  return <button onClick={() => setCount((current) => current + 1)}>{count}</button>;
-}
-```
+    Parent
+      ↓
+    Props
+      ↓
+    Child
 
-Use the functional updater when the next state depends on the previous state. Treat objects and arrays in state immutably by creating updated copies.
+The child should not modify its props.
 
-## Props vs. State
+---
+
+## 8. State
+
+**State** is data that can change over time.
+
+Use `useState()` to create state.
+
+    import { useState } from "react";
+
+    function Counter() {
+      const [count, setCount] = useState(0);
+
+      return (
+        <button onClick={() => setCount(count + 1)}>
+          {count}
+        </button>
+      );
+    }
+
+When state changes, React schedules a **re-render**.
+
+Do not directly modify state.
+
+    count = count + 1; // ❌
+
+Use the setter:
+
+    setCount(count + 1); // ✅
+
+If the new value depends on the previous value, use a functional updater:
+
+    setCount((current) => current + 1);
+
+---
+
+## 9. Props vs State
 
 | Props | State |
 |---|---|
-| Supplied by a parent | Owned by the component or its state owner |
-| Read-only to the receiving component | Updated through a state setter or reducer |
-| Communicate data/configuration downward | Represents data that changes over time |
+| Comes from parent | Owned by component/state owner |
+| Read-only | Can be updated |
+| Used to pass data | Used for changing data |
+| Parent → Child | Changes trigger re-render |
 
-Avoid storing a value in state if it can be derived from existing props or state; duplicated state can get out of sync.
+### Easy Remember
 
-## Component Composition
+    Props → Data coming in
+    State → Data that changes
 
-Composition builds larger interfaces by combining smaller components. A parent can pass content through the special `children` prop or pass a component as a prop.
+Avoid storing data in state if it can be calculated from existing props/state.
 
-```jsx
-function Panel({ title, children }) {
-  return (
-    <section>
-      <h2>{title}</h2>
-      {children}
-    </section>
-  );
-}
+---
 
-<Panel title="Account"><AccountDetails /></Panel>
-```
+## 10. Component Composition
 
-Prefer composition for reusable layouts before adding complex inheritance-like component APIs.
+Composition means **building bigger components using smaller components**.
 
-## Interview reminders
+### `children`
 
-Explain declarative rendering, one-way data flow, props vs. state, why components are composed, and how React differs from manually updating the DOM.
+    function Panel({ title, children }) {
+      return (
+        <section>
+          <h2>{title}</h2>
+          {children}
+        </section>
+      );
+    }
+
+    <Panel title="Account">
+      <AccountDetails />
+    </Panel>
+
+Here, `AccountDetails` is passed through `children`.
+
+### Remember
+
+> Prefer composition to make components reusable and flexible.
+
+---
+
+## 11. `children` Prop
+
+`children` is a special React prop that contains the content placed **between a component's opening and closing tags**.
+
+    function Panel({ children }) {
+      return (
+        <div>
+          {children}
+        </div>
+      );
+    }
+
+    <Panel>
+      <h1>Hello</h1>
+      <p>Welcome!</p>
+    </Panel>
+
+Here, everything inside `<Panel>` becomes the `children` prop.
+
+### Why use it?
+
+It makes components **reusable and flexible**.
+
+    function Card({ children }) {
+      return (
+        <div className="card">
+          {children}
+        </div>
+      );
+    }
+
+    <Card>
+      <h2>Profile</h2>
+      <p>John</p>
+    </Card>
+
+The `Card` component does not need to know what content will be inside it.
+
+### Remember
+
+    children → Content passed between component tags

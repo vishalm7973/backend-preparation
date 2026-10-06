@@ -1,59 +1,165 @@
 # Redux Toolkit
 
-**Redux Toolkit (RTK)** is the recommended way to write Redux. It includes utilities for store setup, slices, immutable updates, async workflows, and server-data caching.
+**Redux Toolkit (RTK)** is the recommended way to write Redux.
 
-## `configureStore`
+It makes Redux easier by providing tools for:
+- Store setup
+- Slices
+- Reducers
+- Async operations
+- Server-data caching
 
-`configureStore` creates the store, combines reducer maps, installs useful development checks, and includes thunk middleware by default.
+---
 
-## `createSlice`
+## 1. `configureStore`
 
-`createSlice` groups a feature's name, initial state, and reducer functions. It generates action creators and action types automatically. Reducers may use mutation-like syntax because RTK uses Immer to produce immutable updates; do not mutate state outside these reducers.
+Creates the Redux store.
 
-```javascript
-import { configureStore, createSlice } from "@reduxjs/toolkit";
+It also:
+- Configures reducers
+- Adds useful middleware
+- Enables development checks
+- Includes thunk middleware by default
 
-const counterSlice = createSlice({
-  name: "counter",
-  initialState: { value: 0 },
-  reducers: {
-    increment(state) {
-      state.value += 1;
-    },
-    incrementBy(state, action) {
-      state.value += action.payload;
-    }
-  }
-});
+    const store = configureStore({
+      reducer: {
+        counter: counterSlice.reducer
+      }
+    });
 
-export const { increment, incrementBy } = counterSlice.actions;
+### Remember
 
-const store = configureStore({
-  reducer: { counter: counterSlice.reducer }
-});
+    configureStore → Create and configure the Redux store
 
-store.dispatch(incrementBy(2));
-```
+---
 
-The apparent mutation is an Immer draft; RTK creates the next immutable state. Action creators return ordinary actions, for example `{ type: "counter/incrementBy", payload: 2 }`.
+## 2. `createSlice`
 
-## Store and React setup
+`createSlice` creates a feature with:
 
-Use React Redux's `Provider` to make the store available to the component tree. Components then read state with `useSelector` and dispatch actions with `useDispatch` (covered in [React Redux hooks and async](03-async.md)).
+- Name
+- Initial state
+- Reducers
 
-```jsx
-import { Provider } from "react-redux";
+It automatically creates **actions and action types**.
 
-root.render(
-  <Provider store={store}>
-    <App />
-  </Provider>
-);
-```
+    const counterSlice = createSlice({
+      name: "counter",
 
-## Toolkit interview points
+      initialState: {
+        value: 0
+      },
 
-- Prefer feature slices over hand-writing action type constants and switch-based reducers for every feature.
-- Keep state serializable when possible so DevTools, replay, and persistence behave predictably. Avoid storing functions, class instances, DOM nodes, or Promises in Redux state.
-- `createAsyncThunk` handles common request lifecycles; RTK Query is a higher-level option for server-data fetching and caching.
-- Split reducers by feature as the application grows; `configureStore` combines them.
+      reducers: {
+        increment(state) {
+          state.value += 1;
+        },
+
+        incrementBy(state, action) {
+          state.value += action.payload;
+        }
+      }
+    });
+
+    export const {
+      increment,
+      incrementBy
+    } = counterSlice.actions;
+
+### Dispatch
+
+    store.dispatch(incrementBy(2));
+
+RTK uses **Immer**, so mutation-like code inside reducers is safe.
+
+    state.value += 1;
+
+Immer creates the new immutable state internally.
+
+### Remember
+
+    createSlice → State + Reducers + Actions
+
+---
+
+## 3. Provider
+
+`Provider` makes the Redux store available to React components.
+
+    import { Provider } from "react-redux";
+
+    root.render(
+      <Provider store={store}>
+        <App />
+      </Provider>
+    );
+
+Then components can use:
+
+    useSelector() → Read state
+    useDispatch() → Dispatch actions
+
+---
+
+## 4. Redux Toolkit Async
+
+### `createAsyncThunk`
+
+Used for common async operations such as API requests.
+
+    createAsyncThunk → Handle async request lifecycle
+
+It provides states like:
+
+    pending
+    fulfilled
+    rejected
+
+### RTK Query
+
+Used for **API data fetching and caching**.
+
+    RTK Query → Fetch + Cache server data
+
+---
+
+## 5. Keep Redux State Serializable
+
+Prefer storing simple data:
+
+    string
+    number
+    boolean
+    array
+    object
+
+Avoid storing:
+
+    functions
+    DOM elements
+    Promises
+    class instances
+
+This keeps Redux DevTools and persistence predictable.
+
+---
+
+## 6. Feature-Based Structure
+
+As the application grows, split Redux code by feature.
+
+    store
+      ├── counter
+      │   └── counterSlice.js
+      │
+      ├── users
+      │   └── userSlice.js
+      │
+      └── products
+          └── productSlice.js
+
+---
+
+### Interview Answer
+
+> Redux Toolkit is the recommended way to use Redux. It reduces boilerplate using `configureStore` and `createSlice`, simplifies immutable updates with Immer, and provides tools like `createAsyncThunk` and RTK Query for async and server data.

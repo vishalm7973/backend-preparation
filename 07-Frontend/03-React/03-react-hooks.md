@@ -1,118 +1,385 @@
 # React Hooks
 
-Hooks let function components use React features such as state, context, refs, and effects.
+Hooks let function components use React features like **state, effects, context, and refs**.
 
-## Rules of Hooks
+---
 
-- Call Hooks only at the top level of a function component or a custom Hook, not inside loops, conditions, or nested functions.
-- Call Hooks only from React function components or custom Hooks.
-- Keep Hook calls in the same order on every render so React can associate state with each call.
+## 1. Rules of Hooks
 
-## `useState`
+- Call Hooks only at the **top level**.
+- Do not call Hooks inside loops, conditions, or nested functions.
+- Call Hooks only from React components or custom Hooks.
+- Keep Hook calls in the **same order** on every render.
 
-Stores component state and returns the current render's value plus a setter. The setter schedules another render; use a functional updater when the next value depends on the previous one.
+### Wrong
 
-```jsx
-const [count, setCount] = useState(0);
-setCount((current) => current + 1);
-```
+    if (isLoggedIn) {
+      useEffect(() => {});
+    }
 
-State is a snapshot for that render. Mutating an object in state and passing the same reference may not cause the update you expect; create a new object/array.
+### Correct
 
-## `useEffect`
+    useEffect(() => {
+      if (isLoggedIn) {
+        // logic
+      }
+    }, [isLoggedIn]);
 
-Synchronizes a component with an external system, such as a subscription, timer, or browser API. Effects run after a commit. Do not use an effect for a value that can be calculated during render or for every user event when the event handler can perform the work directly.
+---
 
-```jsx
-useEffect(() => {
-  const connection = connect(roomId);
-  return () => connection.disconnect();
-}, [roomId]);
-```
+## 2. `useState`
 
-## Effect dependency array and cleanup
+Used to store component state.
 
-React compares dependency values using `Object.is` to decide when an effect should re-synchronize. Include every reactive value read by the effect; omitting one can create stale closures. Restructure the effect or memoize inputs only when there is a clear reason rather than suppressing dependency warnings.
+    const [count, setCount] = useState(0);
 
-- No dependency array: effect runs after every commit.
-- `[]`: effect has no reactive dependencies; setup runs after mount and cleanup on unmount, with development Strict Mode checks possibly repeating setup/cleanup.
-- `[a, b]`: effect re-runs when a dependency changes.
-- A cleanup function runs before the effect re-runs and on unmount. Use it to unsubscribe, clear timers, or abort obsolete requests.
+    setCount(10);
 
-## `useContext`
+When state changes, React schedules a re-render.
 
-Reads the nearest value provided for a context. It helps avoid passing a value through many intermediate components. Consumers update when the provider value changes; context is not automatically a replacement for every global state store.
+### Previous State
 
-```jsx
-const theme = useContext(ThemeContext);
-```
+If the new value depends on the previous value, use a functional updater.
 
-## `useRef`
+    setCount((current) => current + 1);
 
-Returns a stable object whose `.current` value persists between renders. Changing `.current` does not trigger a render. Use refs for DOM nodes or mutable values that do not determine rendered output.
+### Important
 
-```jsx
-const inputRef = useRef(null);
-// <input ref={inputRef} />
-inputRef.current?.focus();
-```
+State is a **snapshot for the current render**.
 
-## `useMemo`
+Do not directly mutate objects or arrays in state.
 
-Caches the result of a calculation between renders while dependencies are unchanged. Use it for measured expensive calculations or stable derived values; it is a performance optimization, not a semantic guarantee.
+    user.name = "John"; // ❌
 
-```jsx
-const visibleItems = useMemo(
-  () => filterItems(items, query),
-  [items, query]
-);
-```
+Create a new object instead.
 
-## `useCallback`
+    setUser({
+      ...user,
+      name: "John"
+    }); // ✅
 
-Caches a function definition between renders while dependencies are unchanged. It is mainly useful when function identity matters to a memoized child or another Hook; do not add it by default.
+---
 
-```jsx
-const handleSave = useCallback(() => save(recordId), [recordId]);
-```
+## 3. `useEffect`
 
-## `useReducer`
+Used to **synchronize with external systems** such as:
 
-Manages state through a reducer function that receives the current state and an action and returns the next state. It is useful when transitions are related, involve multiple fields, or benefit from centralized action logic.
+- API calls
+- Timers
+- Event listeners
+- Subscriptions
+- Browser APIs
 
-```jsx
-function reducer(state, action) {
-  switch (action.type) {
-    case "increment": return { count: state.count + 1 };
-    case "reset": return { count: 0 };
-    default: return state;
-  }
-}
-const [state, dispatch] = useReducer(reducer, { count: 0 });
-```
+    useEffect(() => {
+      console.log("Effect runs");
 
-Reducers should be pure and should return new state rather than mutate existing state.
+      return () => {
+        console.log("Cleanup");
+      };
+    }, []);
 
-## Custom Hooks
+Effects run **after the render is committed**.
 
-A custom Hook is a function whose name starts with `use` and that composes built-in or other custom Hooks. It shares stateful logic between components; each call has its own Hook state unless it reads shared state such as context or an external store.
+### Example
 
-```jsx
-function useOnlineStatus() {
-  const [online, setOnline] = useState(navigator.onLine);
-  useEffect(() => {
-    const update = () => setOnline(navigator.onLine);
-    window.addEventListener("online", update);
-    window.addEventListener("offline", update);
-    return () => {
-      window.removeEventListener("online", update);
-      window.removeEventListener("offline", update);
-    };
-  }, []);
-  return online;
-}
-```
+    useEffect(() => {
+      const timer = setInterval(() => {
+        console.log("Running");
+      }, 1000);
 
-## Interview reminders
+      return () => {
+        clearInterval(timer);
+      };
+    }, []);
 
-Explain Hook call ordering, state snapshots, effect synchronization and cleanup, dependency correctness, when a ref differs from state, and why memoization should be used to address a measured identity or computation cost.
+### Remember
+
+    useEffect → Synchronize with external systems
+
+---
+
+## 4. `useEffect` Dependency Array
+
+### No dependency array
+
+Runs after every commit.
+
+    useEffect(() => {
+      console.log("Runs after every render");
+    });
+
+### Empty array `[]`
+
+Runs after the component mounts.
+
+Cleanup runs when the component unmounts.
+
+    useEffect(() => {
+      console.log("Mounted");
+
+      return () => {
+        console.log("Unmounted");
+      };
+    }, []);
+
+### Dependencies
+
+Runs after mount and when a dependency changes.
+
+    useEffect(() => {
+      console.log(userId);
+    }, [userId]);
+
+### Cleanup
+
+Cleanup runs before the effect runs again and when the component unmounts.
+
+    useEffect(() => {
+      const timer = setInterval(() => {
+        console.log("Running");
+      }, 1000);
+
+      return () => {
+        clearInterval(timer);
+      };
+    }, []);
+
+### Remember
+
+    []        → No reactive dependencies
+    [value]   → Runs when value changes
+    no []     → Runs after every commit
+
+---
+
+## 5. `useContext`
+
+Used to read data from React Context.
+
+It helps avoid passing props through many components (**prop drilling**).
+
+    const theme = useContext(ThemeContext);
+
+Example:
+
+    const ThemeContext = createContext("light");
+
+    function App() {
+      return (
+        <ThemeContext.Provider value="dark">
+          <Dashboard />
+        </ThemeContext.Provider>
+      );
+    }
+
+    function Dashboard() {
+      const theme = useContext(ThemeContext);
+
+      return <p>{theme}</p>;
+    }
+
+### Remember
+
+    useContext → Read shared context value
+
+---
+
+## 6. `useRef`
+
+Used to store a value that **persists between renders without causing a re-render**.
+
+It is also commonly used to directly access a DOM element, such as an input.
+
+    const inputRef = useRef(null);
+
+    <input ref={inputRef} />
+
+    inputRef.current?.focus();
+
+### Example
+
+Store a value without triggering a render:
+
+    const countRef = useRef(0);
+
+    countRef.current++;
+
+### Remember
+
+    useState → Changing value causes re-render
+    useRef   → Changing .current does NOT cause re-render
+
+---
+
+## 7. `useMemo`
+
+Caches the **result of a calculation**.
+
+    const filteredUsers = useMemo(
+      () => users.filter((user) => user.active),
+      [users]
+    );
+
+The calculation runs again when `users` changes.
+
+### Remember
+
+    useMemo → Memoizes a value/result
+
+Use it mainly when a calculation is expensive or stable value identity matters.
+
+---
+
+## 8. `useCallback`
+
+Caches a **function** between renders.
+
+    const handleSave = useCallback(() => {
+      save(userId);
+    }, [userId]);
+
+### Remember
+
+    useMemo     → Memoizes a value
+    useCallback → Memoizes a function
+
+It is mainly useful when function identity matters, such as when passing a callback to a memoized child.
+
+---
+
+## 9. `React.memo`
+
+`React.memo` is used to **prevent unnecessary re-renders of a component** when its props have not changed.
+
+    const User = React.memo(function User({ name }) {
+      return <p>{name}</p>;
+    });
+
+If the parent re-renders but `name` is the same, React can skip re-rendering `User`.
+
+### Important
+
+`React.memo` checks props using **shallow comparison** by default.
+
+For example:
+
+    <User name="John" />
+
+If the prop value stays the same, the child can skip rendering.
+
+But with objects/functions:
+
+    <User user={{ name: "John" }} />
+
+A new object is created on every render, so the prop is considered changed.
+
+### `React.memo` + `useCallback`
+
+Useful when passing functions to memoized children.
+
+    const Child = React.memo(({ onSave }) => {
+      return <button onClick={onSave}>Save</button>;
+    });
+
+    function Parent() {
+      const handleSave = useCallback(() => {
+        console.log("Saved");
+      }, []);
+
+      return <Child onSave={handleSave} />;
+    }
+
+### Remember
+
+    React.memo   → Memoizes a component
+    useMemo      → Memoizes a value
+    useCallback  → Memoizes a function
+
+Use `React.memo` when avoiding unnecessary child re-renders is actually useful. It is a **performance optimization**, not something every component needs.
+
+---
+
+## 10. `useReducer`
+
+Useful for **complex state logic**.
+
+    function reducer(state, action) {
+      switch (action.type) {
+        case "increment":
+          return {
+            count: state.count + 1
+          };
+
+        case "reset":
+          return {
+            count: 0
+          };
+
+        default:
+          return state;
+      }
+    }
+
+    const [state, dispatch] = useReducer(
+      reducer,
+      { count: 0 }
+    );
+
+### Main Parts
+
+- **State** → Current data of the component.
+- **Action** → Describes what happened / what change we want.
+- **Reducer** → Function that decides how the state should change.
+- **Dispatch** → Sends an action to the reducer.
+
+### Flow
+
+    dispatch(action)
+          ↓
+       reducer
+          ↓
+      new state
+          ↓
+    re-render
+
+### Remember
+
+    useState   → Simple state
+    useReducer → Complex state transitions
+
+Reducers should be **pure** and should return new state.
+
+---
+
+## 11. Custom Hooks
+
+A custom Hook is a function whose name starts with `use`.
+
+It allows us to **reuse stateful logic** between components.
+
+    function useCounter() {
+      const [count, setCount] = useState(0);
+
+      const increment = () => {
+        setCount((current) => current + 1);
+      };
+
+      return {
+        count,
+        increment
+      };
+    }
+
+Use it:
+
+    function App() {
+      const { count, increment } = useCounter();
+
+      return (
+        <button onClick={increment}>
+          {count}
+        </button>
+      );
+    }
+
+Each call to a custom Hook has its **own state**.
